@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}Records - CPAR Maternal Health{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Maternal Records</h2>
+    <p class="text-muted">{{ records.paginator.count }} total record{{ records.paginator.count|pluralize }}</p>
+  </div>
+  <div class="page-header-actions">
+    {% if unsynced_count > 0 %}
+    <button id="sync-btn" class="btn btn--warning" onclick="syncRecords()">
+      Sync ({{ unsynced_count }} pending)
+    </button>
+    {% else %}
+    <button class="btn btn--outline" disabled>All Synced</button>
+    {% endif %}
+    <a href="{% url 'record_create' %}" class="btn btn--primary">New Record</a>
+  </div>
+</div>
+
+<form method="get" class="search-bar">
+  <input
+    type="search"
+    name="q"
+    value="{{ q }}"
+    placeholder="Search by name or barangay..."
+    class="form-input search-input"
+  />
+  <button type="submit" class="btn btn--outline">Search</button>
+  {% if q %}<a href="{% url 'record_list' %}" class="btn btn--ghost">Clear</a>{% endif %}
+</form>
+
+<div class="card" style="margin-bottom: 1rem;">
+  <h3 class="section-title">System Status</h3>
+  <div class="form-grid">
+    <div>
+      <strong>Encryption</strong>
+      <p class="text-muted">{% if system_status.encryption_configured %}Configured{% else %}Not configured{% endif %}</p>
+    </div>
+    <div>
+      <strong>Remote Sync</strong>
+      <p class="text-muted">{% if system_status.remote_sync_configured %}Configured{% else %}Not configured{% endif %}</p>
+    </div>
+    <div>
+      <strong>Pending Uploads</strong>
+      <p class="text-muted">{{ unsynced_count }}</p>
+    </div>
+  </div>
+</div>
+
+{% if last_sync %}
+<div class="alert {% if last_sync.status == 'success' %}alert--success{% elif last_sync.status == 'partial' or last_sync.status == 'skipped' %}alert--warning{% else %}alert--error{% endif %}">
+  Last sync: {{ last_sync.get_status_display }}. {{ last_sync.message }}
+  {% if last_sync.finished_at %}Finished {{ last_sync.finished_at }}.{% endif %}
+</div>
+{% endif %}
+
+{% if records %}
+<div class="table-wrapper">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Age</th>
+        <th>Barangay</th>
+        <th>Date Collected</th>
+        <th>Agent</th>
+        <th>Synced</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for record in records %}
+      <tr>
+        <td>{{ record.pk }}</td>
+        <td><strong>{{ record.last_name }}, {{ record.first_name }}</strong>{% if record.middle_name %} {{ record.middle_name|first }}.{% endif %}</td>
+        <td>{{ record.age|default:"-" }}</td>
+        <td>{{ record.address_barangay|default:"-" }}</td>
+        <td>{{ record.date_collected }}</td>
+        <td>{{ record.agent.get_full_name|default:record.agent.username|default:"-" }}</td>
+        <td>
+          {% if record.is_synced %}
+          <span class="badge badge--success">Synced</span>
+          {% else %}
+          <span class="badge badge--warning">Pending</span>
+          {% endif %}
+        </td>
+        <td class="actions">
+          <a href="{% url 'record_detail' record.pk %}" class="btn btn--sm btn--outline">View</a>
+          <a href="{% url 'record_edit' record.pk %}" class="btn btn--sm btn--ghost">Edit</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if records.has_other_pages %}
+<div class="pagination">
+  {% if records.has_previous %}
+  <a href="?page={{ records.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" class="btn btn--outline btn--sm">&laquo; Prev</a>
+  {% endif %}
+  <span class="page-info">Page {{ records.number }} of {{ records.paginator.num_pages }}</span>
+  {% if records.has_next %}
+  <a href="?page={{ records.next_page_number }}{% if q %}&q={{ q }}{% endif %}" class="btn btn--outline btn--sm">Next &raquo;</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <p>No records found{% if q %} for "{{ q }}"{% endif %}.</p>
+  <a href="{% url 'record_create' %}" class="btn btn--primary">Add First Record</a>
+</div>
+{% endif %}
+
+<div id="sync-status" class="alert hidden"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function syncRecords() {
+  const btn = document.getElementById('sync-btn');
+  const status = document.getElementById('sync-status');
+  btn.disabled = true;
+  btn.textContent = 'Syncing...';
+  fetch("{% url 'trigger_sync' %}", {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}',
+      'Content-Type': 'application/json',
+    },
+  })
+  .then(r => r.json())
+  .then(data => {
+    status.className = 'alert alert--' + (data.status === 'ok' ? 'success' : 'error');
+    status.textContent = data.message;
+    status.classList.remove('hidden');
+    if (data.status === 'ok') setTimeout(() => location.reload(), 1500);
+    else btn.disabled = false;
+  })
+  .catch(err => {
+    status.className = 'alert alert--error';
+    status.textContent = 'Sync failed: ' + err.message;
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Retry Sync';
+  });
+}
+</script>
+{% endblock %}

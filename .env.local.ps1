@@ -1,0 +1,1 @@
+$env:FIELD_ENCRYPTION_KEY = "p8ZXud7Dm3Fudj48m4Yyv0djQiH3qiUkG6lWawUk28c="

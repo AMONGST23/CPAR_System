@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% block title %}Admin Panel - CPAR{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Admin Panel</h2>
+    <p class="text-muted">Manage agents, review records, and monitor sync.</p>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card">
+    <h3 class="section-title">Overview</h3>
+    <dl class="detail-list">
+      <dt>Total Users</dt><dd>{{ summary.users }}</dd>
+      <dt>Total Records</dt><dd>{{ summary.records }}</dd>
+      <dt>Unsynced</dt><dd>{{ summary.unsynced }}</dd>
+    </dl>
+    <form method="post" style="margin-top: 1rem;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="run_sync">
+      <button type="submit" class="btn btn--warning">Run Sync</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">Create Agent</h3>
+    <form method="post" class="auth-form">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create_agent">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        {{ create_form.username }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">First Name</label>
+        {{ create_form.first_name }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name</label>
+        {{ create_form.last_name }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assigned Area</label>
+        {{ create_form.assigned_area }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        {{ create_form.phone_number }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        {{ create_form.password1 }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        {{ create_form.password2 }}
+      </div>
+      {% if create_form.errors %}
+      <div class="alert alert--error">{{ create_form.errors }}</div>
+      {% endif %}
+      <button type="submit" class="btn btn--primary">Create Agent</button>
+    </form>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 1rem;">
+  <h3 class="section-title">Users</h3>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Name</th>
+          <th>Area</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for listed_user in users %}
+        <tr>
+          <td>{{ listed_user.username }}</td>
+          <td>{{ listed_user.get_full_name|default:"-" }}</td>
+          <td>{{ listed_user.profile.assigned_area|default:"-" }}</td>
+          <td>{% if listed_user.is_active %}Active{% else %}Disabled{% endif %}</td>
+          <td class="actions">
+            <form method="post" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="toggle_user">
+              <input type="hidden" name="user_id" value="{{ listed_user.id }}">
+              <button type="submit" class="btn btn--sm btn--outline">{% if listed_user.is_active %}Disable{% else %}Enable{% endif %}</button>
+            </form>
+            <form method="post" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="reset_password">
+              <input type="hidden" name="user_id" value="{{ listed_user.id }}">
+              <input type="password" name="password-new_password" class="form-input" placeholder="New password" style="width: 150px; display:inline-block;">
+              <button type="submit" class="btn btn--sm btn--ghost">Reset Password</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 1rem;">
+  <h3 class="section-title">Records</h3>
+  <form method="get" class="search-bar">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search records..." class="form-input search-input">
+    <button type="submit" class="btn btn--outline">Search</button>
+  </form>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Barangay</th>
+          <th>Date</th>
+          <th>Agent</th>
+          <th>Sync</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for record in records %}
+        <tr>
+          <td>{{ record.full_name }}</td>
+          <td>{{ record.address_barangay|default:"-" }}</td>
+          <td>{{ record.date_collected }}</td>
+          <td>{{ record.agent.username|default:"-" }}</td>
+          <td>{% if record.is_synced %}Synced{% else %}Pending{% endif %}</td>
+          <td class="actions">
+            <a href="{% url 'record_detail' record.pk %}" class="btn btn--sm btn--outline">View</a>
+            <a href="{% url 'record_edit' record.pk %}" class="btn btn--sm btn--ghost">Edit</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6">No records found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 1rem;">
+  <h3 class="section-title">Recent Sync Logs</h3>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Started</th>
+          <th>Status</th>
+          <th>Attempted</th>
+          <th>Synced</th>
+          <th>Failed</th>
+          <th>Message</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in sync_logs %}
+        <tr>
+          <td>{{ log.started_at }}</td>
+          <td>{{ log.get_status_display }}</td>
+          <td>{{ log.records_attempted }}</td>
+          <td>{{ log.records_synced }}</td>
+          <td>{{ log.records_failed }}</td>
+          <td>{{ log.message|default:"-" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6">No sync logs yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

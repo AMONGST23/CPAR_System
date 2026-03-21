@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}{{ record }} - CPAR{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>{{ record.last_name }}, {{ record.first_name }}{% if record.middle_name %} {{ record.middle_name }}{% endif %}</h2>
+    <p class="text-muted">Collected: {{ record.date_collected }} &bull; Agent: {{ record.agent.get_full_name|default:record.agent.username|default:"-" }}</p>
+  </div>
+  <div class="page-header-actions">
+    <a href="{% url 'record_edit' record.pk %}" class="btn btn--primary">Edit</a>
+    <a href="{% url 'record_delete' record.pk %}" class="btn btn--danger">Delete</a>
+    <a href="{% url 'record_list' %}" class="btn btn--ghost">&larr; Back</a>
+  </div>
+</div>
+
+{% if not record.is_synced %}
+<div class="alert alert--warning">This record has not been synced to the remote server yet.</div>
+{% endif %}
+
+<div class="detail-grid">
+  <div class="card">
+    <h3 class="section-title">A. Respondent Information</h3>
+    <dl class="detail-list">
+      <dt>Full Name</dt><dd>{{ record.last_name }}, {{ record.first_name }} {{ record.middle_name }}</dd>
+      <dt>Date of Birth</dt><dd>{{ record.date_of_birth|default:"-" }}</dd>
+      <dt>Age</dt><dd>{{ record.age|default:"-" }}</dd>
+      <dt>Civil Status</dt><dd>{{ record.get_civil_status_display|default:"-" }}</dd>
+      <dt>Address</dt><dd>{{ record.address_barangay|default:"-" }}, {{ record.address_municipality|default:"-" }}, {{ record.address_province|default:"-" }}</dd>
+      <dt>Contact</dt><dd>{{ record.contact_number|default:"-" }}</dd>
+      <dt>Education</dt><dd>{{ record.get_educational_attainment_display|default:"-" }}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">B. Obstetric History</h3>
+    <dl class="detail-list">
+      <dt>G/P/A</dt><dd>G{{ record.gravida|default:"?" }} P{{ record.para|default:"?" }} A{{ record.abortion|default:"?" }}</dd>
+      <dt>Living Children</dt><dd>{{ record.living_children|default:"-" }}</dd>
+      <dt>Last Delivery</dt><dd>{{ record.last_delivery_date|default:"-" }}</dd>
+      <dt>Last Delivery Type</dt><dd>{{ record.get_last_delivery_type_display|default:"-" }}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">C. Current Pregnancy</h3>
+    <dl class="detail-list">
+      <dt>Currently Pregnant</dt><dd>{% if record.is_currently_pregnant %}Yes{% else %}No{% endif %}</dd>
+      <dt>LMP</dt><dd>{{ record.lmp|default:"-" }}</dd>
+      <dt>Age of Gestation</dt><dd>{% if record.age_of_gestation_weeks %}{{ record.age_of_gestation_weeks }} weeks{% else %}-{% endif %}</dd>
+      <dt>EDD</dt><dd>{{ record.expected_date_of_delivery|default:"-" }}</dd>
+      <dt>Prenatal Visits</dt><dd>{{ record.prenatal_visit_count|default:"0" }}</dd>
+      <dt>Prenatal Facility</dt><dd>{{ record.prenatal_facility|default:"-" }}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">D. Health Assessment</h3>
+    <dl class="detail-list">
+      <dt>Weight</dt><dd>{% if record.weight_kg %}{{ record.weight_kg }} kg{% else %}-{% endif %}</dd>
+      <dt>Height</dt><dd>{% if record.height_cm %}{{ record.height_cm }} cm{% else %}-{% endif %}</dd>
+      <dt>Blood Pressure</dt><dd>{{ record.blood_pressure|default:"-" }}</dd>
+      <dt>Hemoglobin</dt><dd>{% if record.hemoglobin_level %}{{ record.hemoglobin_level }} g/dL{% else %}-{% endif %}</dd>
+      <dt>Nutritional Status</dt><dd>{{ record.get_nutritional_status_display|default:"-" }}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">E. Services Received</h3>
+    <dl class="detail-list">
+      <dt>Tetanus Toxoid</dt><dd>{{ record.get_tetanus_toxoid_status_display }}</dd>
+      <dt>Iron Supplementation</dt><dd>{% if record.iron_supplementation %}Yes{% else %}No{% endif %}</dd>
+      <dt>Vitamin A</dt><dd>{% if record.vitamin_a_supplementation %}Yes{% else %}No{% endif %}</dd>
+      <dt>Dental Check-up</dt><dd>{% if record.dental_checkup %}Yes{% else %}No{% endif %}</dd>
+      <dt>FP Counseling</dt><dd>{% if record.family_planning_counseling %}Yes{% else %}No{% endif %}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">F. Delivery</h3>
+    <dl class="detail-list">
+      <dt>Date of Delivery</dt><dd>{{ record.date_of_delivery|default:"-" }}</dd>
+      <dt>Place</dt><dd>{{ record.get_place_of_delivery_display|default:"-" }}</dd>
+      <dt>Birth Attendant</dt><dd>{{ record.get_birth_attendant_display|default:"-" }}</dd>
+      <dt>Delivery Type</dt><dd>{{ record.get_delivery_type_display|default:"-" }}</dd>
+      <dt>Outcome</dt><dd>{{ record.get_delivery_outcome_display|default:"-" }}</dd>
+      <dt>Baby Sex</dt><dd>{{ record.get_baby_sex_display|default:"-" }}</dd>
+      <dt>Birth Weight</dt><dd>{% if record.birth_weight_kg %}{{ record.birth_weight_kg }} kg{% else %}-{% endif %}</dd>
+      <dt>Complications</dt><dd>{{ record.delivery_complications|default:"None" }}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">G. Postpartum</h3>
+    <dl class="detail-list">
+      <dt>Postpartum Check-up</dt><dd>{% if record.postpartum_checkup_done %}Done{% else %}Not done{% endif %}</dd>
+      <dt>Breastfeeding</dt><dd>{{ record.get_breastfeeding_status_display|default:"-" }}</dd>
+      <dt>Family Planning Method</dt><dd>{{ record.get_family_planning_method_display|default:"-" }}</dd>
+      <dt>Complications</dt><dd>{{ record.postpartum_complications|default:"None" }}</dd>
+    </dl>
+  </div>
+
+  {% if record.notes %}
+  <div class="card card--full">
+    <h3 class="section-title">Notes</h3>
+    <p>{{ record.notes }}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

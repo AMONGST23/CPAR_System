@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}My Profile — CPAR{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>My Profile</h2>
+</div>
+<div class="card" style="max-width: 480px;">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Full Name</label>
+      <input type="text" class="form-input" value="{{ user.get_full_name }}" disabled />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input type="text" class="form-input" value="{{ user.username }}" disabled />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="phone_number">Phone Number</label>
+      <input type="tel" id="phone_number" name="phone_number" class="form-input" value="{{ profile.phone_number }}" />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="assigned_area">Assigned Area</label>
+      <input type="text" id="assigned_area" name="assigned_area" class="form-input" value="{{ profile.assigned_area }}" />
+    </div>
+    <button type="submit" class="btn btn--primary">Save Changes</button>
+  </form>
+</div>
+{% endblock %}

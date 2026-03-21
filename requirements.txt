@@ -1,0 +1,5 @@
+Django==6.0.3
+djangorestframework==3.17.0
+django-cors-headers==4.9.0
+cryptography==46.0.5
+Pillow==12.1.1

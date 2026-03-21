@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Record - CPAR{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>{{ action }} Maternal Record</h2>
+    {% if record %}<p class="text-muted">{{ record }}</p>{% endif %}
+  </div>
+  <a href="{% url 'record_list' %}" class="btn btn--ghost">&larr; Back to List</a>
+</div>
+
+<div class="alert alert--warning draft-panel">
+  <strong>Tablet draft protection</strong>
+  <p data-draft-status class="draft-status">Checking local draft...</p>
+  <button type="button" class="btn btn--ghost btn--sm" data-clear-draft>Clear local draft</button>
+</div>
+
+<form method="post" id="survey-form" novalidate data-draft-key="maternal-record-draft" data-record-mode="{% if record %}edit{% else %}create{% endif %}">
+  {% csrf_token %}
+  <input type="hidden" name="current_section" id="current-section-input" value="{{ active_section|default:'sec-a' }}">
+  <input type="hidden" name="submit_action" id="submit-action-input" value="continue">
+
+  <div class="tabs">
+    <button type="button" class="tab {% if active_section == 'sec-a' or not active_section %}active{% endif %}" data-tab="sec-a">A. Respondent</button>
+    <button type="button" class="tab {% if active_section == 'sec-b' %}active{% endif %}" data-tab="sec-b">B. Obstetric History</button>
+    <button type="button" class="tab {% if active_section == 'sec-c' %}active{% endif %}" data-tab="sec-c">C. Current Pregnancy</button>
+    <button type="button" class="tab {% if active_section == 'sec-d' %}active{% endif %}" data-tab="sec-d">D. Health Assessment</button>
+    <button type="button" class="tab {% if active_section == 'sec-e' %}active{% endif %}" data-tab="sec-e">E. Services</button>
+    <button type="button" class="tab {% if active_section == 'sec-f' %}active{% endif %}" data-tab="sec-f">F. Delivery</button>
+    <button type="button" class="tab {% if active_section == 'sec-g' %}active{% endif %}" data-tab="sec-g">G. Postpartum</button>
+  </div>
+
+  <div class="tab-panel {% if active_section == 'sec-a' or not active_section %}active{% endif %}" id="sec-a">
+    <div class="card">
+      <h3 class="section-title">A. Respondent Information</h3>
+      <div class="form-grid">
+        <div class="form-group form-group--required">
+          <label class="form-label">Last Name *</label>
+          {{ form.last_name }}
+          {% if form.last_name.errors %}<p class="form-error">{{ form.last_name.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="form-group form-group--required">
+          <label class="form-label">First Name *</label>
+          {{ form.first_name }}
+          {% if form.first_name.errors %}<p class="form-error">{{ form.first_name.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Middle Name</label>
+          {{ form.middle_name }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth</label>
+          {{ form.date_of_birth }}
+          {% if form.date_of_birth.errors %}<p class="form-error">{{ form.date_of_birth.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Age</label>
+          {{ form.age }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Civil Status</label>
+          {{ form.civil_status }}
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Barangay</label>
+          {{ form.address_barangay }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Municipality</label>
+          {{ form.address_municipality }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Province</label>
+          {{ form.address_province }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Number</label>
+          {{ form.contact_number }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Educational Attainment</label>
+          {{ form.educational_attainment }}
+        </div>
+        <div class="form-group form-group--required">
+          <label class="form-label">Date Collected *</label>
+          {{ form.date_collected }}
+          {% if form.date_collected.errors %}<p class="form-error">{{ form.date_collected.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel {% if active_section == 'sec-b' %}active{% endif %}" id="sec-b">
+    <div class="card">
+      <h3 class="section-title">B. Obstetric History</h3>
+      <div class="form-grid form-grid--4">
+        <div class="form-group">
+          <label class="form-label">Gravida</label>
+          {{ form.gravida }}
+          {% if form.gravida.errors %}<p class="form-error">{{ form.gravida.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Para</label>
+          {{ form.para }}
+          {% if form.para.errors %}<p class="form-error">{{ form.para.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Abortion</label>
+          {{ form.abortion }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Living Children</label>
+          {{ form.living_children }}
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Last Delivery Date</label>
+          {{ form.last_delivery_date }}
+          {% if form.last_delivery_date.errors %}<p class="form-error">{{ form.last_delivery_date.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Delivery Type</label>
+          {{ form.last_delivery_type }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel {% if active_section == 'sec-c' %}active{% endif %}" id="sec-c">
+    <div class="card">
+      <h3 class="section-title">C. Current Pregnancy</h3>
+      <div class="form-group form-group--checkbox">
+        <label class="checkbox-label">
+          {{ form.is_currently_pregnant }}
+          Currently Pregnant
+        </label>
+        {% if form.is_currently_pregnant.errors %}<p class="form-error">{{ form.is_currently_pregnant.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Last Menstrual Period (LMP)</label>
+          {{ form.lmp }}
+          {% if form.lmp.errors %}<p class="form-error">{{ form.lmp.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Age of Gestation (weeks)</label>
+          {{ form.age_of_gestation_weeks }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Expected Date of Delivery</label>
+          {{ form.expected_date_of_delivery }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prenatal Visits</label>
+          {{ form.prenatal_visit_count }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prenatal Facility</label>
+          {{ form.prenatal_facility }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel {% if active_section == 'sec-d' %}active{% endif %}" id="sec-d">
+    <div class="card">
+      <h3 class="section-title">D. Health Assessment</h3>
+      <div class="form-grid form-grid--4">
+        <div class="form-group">
+          <label class="form-label">Weight (kg)</label>
+          {{ form.weight_kg }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Height (cm)</label>
+          {{ form.height_cm }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Blood Pressure</label>
+          {{ form.blood_pressure }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hemoglobin (g/dL)</label>
+          {{ form.hemoglobin_level }}
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nutritional Status</label>
+          {{ form.nutritional_status }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel {% if active_section == 'sec-e' %}active{% endif %}" id="sec-e">
+    <div class="card">
+      <h3 class="section-title">E. Services Received</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Tetanus Toxoid Status</label>
+          {{ form.tetanus_toxoid_status }}
+        </div>
+      </div>
+      <div class="checkbox-group">
+        <label class="checkbox-label">{{ form.iron_supplementation }} Iron Supplementation</label>
+        <label class="checkbox-label">{{ form.vitamin_a_supplementation }} Vitamin A Supplementation</label>
+        <label class="checkbox-label">{{ form.dental_checkup }} Dental Check-up</label>
+        <label class="checkbox-label">{{ form.family_planning_counseling }} Family Planning Counseling</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel {% if active_section == 'sec-f' %}active{% endif %}" id="sec-f">
+    <div class="card">
+      <h3 class="section-title">F. Delivery Information</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Date of Delivery</label>
+          {{ form.date_of_delivery }}
+          {% if form.date_of_delivery.errors %}<p class="form-error">{{ form.date_of_delivery.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Place of Delivery</label>
+          {{ form.place_of_delivery }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Birth Attendant</label>
+          {{ form.birth_attendant }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Delivery Type</label>
+          {{ form.delivery_type }}
+          {% if form.delivery_type.errors %}<p class="form-error">{{ form.delivery_type.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Delivery Outcome</label>
+          {{ form.delivery_outcome }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sex of Baby</label>
+          {{ form.baby_sex }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Birth Weight (kg)</label>
+          {{ form.birth_weight_kg }}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Delivery Complications</label>
+        {{ form.delivery_complications }}
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel {% if active_section == 'sec-g' %}active{% endif %}" id="sec-g">
+    <div class="card">
+      <h3 class="section-title">G. Postpartum</h3>
+      <div class="checkbox-group">
+        <label class="checkbox-label">{{ form.postpartum_checkup_done }} Postpartum Check-up Done</label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Breastfeeding Status</label>
+          {{ form.breastfeeding_status }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Family Planning Method</label>
+          {{ form.family_planning_method }}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Postpartum Complications</label>
+        {{ form.postpartum_complications }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        {{ form.notes }}
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <a href="{% url 'record_list' %}" class="btn btn--ghost">Cancel</a>
+    <button type="submit" class="btn btn--outline btn--lg" onclick="document.getElementById('submit-action-input').value='exit';">
+      Save and Exit
+    </button>
+    <button type="submit" class="btn btn--primary btn--lg" onclick="document.getElementById('submit-action-input').value='continue';">
+      Save and Continue
+    </button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const currentSectionInput = document.getElementById('current-section-input');
+
+function activateSection(sectionId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const tab = document.querySelector(`.tab[data-tab="${sectionId}"]`);
+  const panel = document.getElementById(sectionId);
+  if (tab && panel) {
+    tab.classList.add('active');
+    panel.classList.add('active');
+    currentSectionInput.value = sectionId;
+  }
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    activateSection(this.dataset.tab);
+  });
+});
+</script>
+{% endblock %}
