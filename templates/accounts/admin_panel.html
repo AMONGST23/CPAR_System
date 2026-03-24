@@ -5,7 +5,7 @@
 <div class="page-header">
   <div>
     <h2>Admin Panel</h2>
-    <p class="text-muted">Manage agents, review records, and monitor sync.</p>
+    <p class="text-muted">Manage agents, review records, and monitor local save status.</p>
   </div>
 </div>
 
@@ -15,12 +15,12 @@
     <dl class="detail-list">
       <dt>Total Users</dt><dd>{{ summary.users }}</dd>
       <dt>Total Records</dt><dd>{{ summary.records }}</dd>
-      <dt>Unsynced</dt><dd>{{ summary.unsynced }}</dd>
+      <dt>Pending Local Confirmation</dt><dd>{{ summary.unsynced }}</dd>
     </dl>
     <form method="post" style="margin-top: 1rem;">
       {% csrf_token %}
       <input type="hidden" name="action" value="run_sync">
-      <button type="submit" class="btn btn--warning">Run Sync</button>
+      <button type="submit" class="btn btn--warning">Confirm Local Save</button>
     </form>
   </div>
 
@@ -112,16 +112,17 @@
   <form method="get" class="search-bar">
     <input type="search" name="q" value="{{ q }}" placeholder="Search records..." class="form-input search-input">
     <button type="submit" class="btn btn--outline">Search</button>
+    <a href="{% url 'admin_export_records' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn--primary">Export to Excel</a>
   </form>
   <div class="table-wrapper">
     <table class="table">
       <thead>
         <tr>
           <th>Name</th>
-          <th>Barangay</th>
+          <th>Region</th>
           <th>Date</th>
           <th>Agent</th>
-          <th>Sync</th>
+          <th>Local Save</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -132,7 +133,7 @@
           <td>{{ record.address_barangay|default:"-" }}</td>
           <td>{{ record.date_collected }}</td>
           <td>{{ record.agent.username|default:"-" }}</td>
-          <td>{% if record.is_synced %}Synced{% else %}Pending{% endif %}</td>
+          <td>{% if record.is_synced %}Saved{% else %}Pending{% endif %}</td>
           <td class="actions">
             <a href="{% url 'record_detail' record.pk %}" class="btn btn--sm btn--outline">View</a>
             <a href="{% url 'record_edit' record.pk %}" class="btn btn--sm btn--ghost">Edit</a>
@@ -149,7 +150,7 @@
 </div>
 
 <div class="card" style="margin-top: 1rem;">
-  <h3 class="section-title">Recent Sync Logs</h3>
+  <h3 class="section-title">Recent Local Save Logs</h3>
   <div class="table-wrapper">
     <table class="table">
       <thead>

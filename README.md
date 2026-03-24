@@ -1,6 +1,6 @@
 # CPAR Maternal Health System
 
-Offline-aware Django web app for maternal data collection on a local network, with later sync to a remote server.
+Offline-aware Django web app for maternal data collection on a local network, with records stored on the local server.
 
 ## Current Scope
 
@@ -8,8 +8,7 @@ Offline-aware Django web app for maternal data collection on a local network, wi
 - User authentication for agents
 - Local draft protection in the browser
 - Local storage in SQLite for field deployment
-- Manual sync to a remote server
-- Sync attempt logging
+- Local save confirmation logging
 - Field encryption at rest for key personal identifiers when `FIELD_ENCRYPTION_KEY` is set
 
 ## Local Run
@@ -46,8 +45,6 @@ The project reads these from the machine environment:
 
 - `DJANGO_SECRET_KEY`
 - `DJANGO_TIME_ZONE`
-- `REMOTE_SYNC_URL`
-- `REMOTE_SYNC_TOKEN`
 - `FIELD_ENCRYPTION_KEY`
 
 For local field deployment, `.\start_local.ps1` also loads values from:
@@ -94,7 +91,7 @@ Check runtime/system status:
 python manage.py system_status
 ```
 
-Trigger manual sync from CLI:
+Trigger local save confirmation from CLI:
 
 ```powershell
 python manage.py sync_data
@@ -130,8 +127,7 @@ Copy-Item .\db.sqlite3 ".\backup\db-$(Get-Date -Format 'yyyyMMdd-HHmmss').sqlite
 - Superuser created
 - Agent accounts created
 - `FIELD_ENCRYPTION_KEY` configured
-- Remote sync URL/token configured if cloud sync is required
 - One local login tested
 - One tablet login tested
 - One record create/edit tested
-- One sync attempt tested
+- One local save confirmation tested

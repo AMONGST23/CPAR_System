@@ -15,7 +15,7 @@
 </div>
 
 {% if not record.is_synced %}
-<div class="alert alert--warning">This record has not been synced to the remote server yet.</div>
+<div class="alert alert--warning">This record has not yet been confirmed as saved on the local server.</div>
 {% endif %}
 
 <div class="detail-grid">
@@ -26,7 +26,7 @@
       <dt>Date of Birth</dt><dd>{{ record.date_of_birth|default:"-" }}</dd>
       <dt>Age</dt><dd>{{ record.age|default:"-" }}</dd>
       <dt>Civil Status</dt><dd>{{ record.get_civil_status_display|default:"-" }}</dd>
-      <dt>Address</dt><dd>{{ record.address_barangay|default:"-" }}, {{ record.address_municipality|default:"-" }}, {{ record.address_province|default:"-" }}</dd>
+      <dt>Address</dt><dd>Region: {{ record.address_barangay|default:"-" }}, {{ record.address_municipality|default:"-" }}, {{ record.address_province|default:"-" }}</dd>
       <dt>Contact</dt><dd>{{ record.contact_number|default:"-" }}</dd>
       <dt>Education</dt><dd>{{ record.get_educational_attainment_display|default:"-" }}</dd>
     </dl>
@@ -77,7 +77,67 @@
   </div>
 
   <div class="card">
-    <h3 class="section-title">F. Delivery</h3>
+    <h3 class="section-title">F. Ultrasound and Referral</h3>
+    <dl class="detail-list">
+      <dt>Ultrasound Before 24 Weeks</dt><dd>{% if record.ultrasound_before_24_weeks %}Yes{% else %}No{% endif %}</dd>
+      <dt>Ultrasound High-Risk Screening</dt><dd>{% if record.ultrasound_screened_high_risk %}Yes{% else %}No{% endif %}</dd>
+      <dt>First Ultrasound Gestational Age</dt><dd>{% if record.first_ultrasound_gestation_weeks %}{{ record.first_ultrasound_gestation_weeks }} weeks{% else %}-{% endif %}</dd>
+      <dt>RUAA High-Risk Identified</dt><dd>{% if record.high_risk_identified_through_ruaa %}Yes{% else %}No{% endif %}</dd>
+      <dt>Placenta Previa Detected</dt><dd>{% if record.complication_placenta_previa %}Yes{% else %}No{% endif %}</dd>
+      <dt>Multiple Gestation Detected</dt><dd>{% if record.complication_multiple_gestation %}Yes{% else %}No{% endif %}</dd>
+      <dt>Breech Detected</dt><dd>{% if record.complication_breech %}Yes{% else %}No{% endif %}</dd>
+      <dt>Other Complications</dt><dd>{{ record.complication_other|default:"-" }}</dd>
+      <dt>Referred High-Risk Pregnancy</dt><dd>{% if record.referred_high_risk_pregnancy %}Yes{% else %}No{% endif %}</dd>
+      <dt>Referral Completed</dt><dd>{% if record.referral_completed %}Yes{% else %}No{% endif %}</dd>
+      <dt>Received Appropriate Referral Care</dt><dd>{% if record.referral_received_appropriate_care %}Yes{% else %}No{% endif %}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">G. Nutrition</h3>
+    <dl class="detail-list">
+      <dt>Nutrition Counseling</dt><dd>{% if record.nutrition_counseling_received %}Yes{% else %}No{% endif %}</dd>
+      <dt>Supplements Received</dt><dd>{% if record.maternal_supplements_received %}Yes{% else %}No{% endif %}</dd>
+      <dt>Referred for Severe Malnutrition</dt><dd>{% if record.severe_malnutrition_referred %}Yes{% else %}No{% endif %}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">H. Male Engagement</h3>
+    <dl class="detail-list">
+      <dt>Accompanied ANC Visit</dt><dd>{% if record.male_partner_accompanied_anc %}Yes{% else %}No{% endif %}</dd>
+      <dt>Participated in Counseling</dt><dd>{% if record.male_partner_participated_counseling %}Yes{% else %}No{% endif %}</dd>
+      <dt>HIV Tested</dt><dd>{% if record.male_partner_hiv_tested %}Yes{% else %}No{% endif %}</dd>
+      <dt>Linked to ART</dt><dd>{% if record.male_partner_hiv_positive_linked_to_art %}Yes{% else %}No{% endif %}</dd>
+      <dt>Supported Referral</dt><dd>{% if record.male_partner_supported_referral %}Yes{% else %}No{% endif %}</dd>
+      <dt>Supported ANC and Facility Delivery</dt><dd>{% if record.partner_support_for_anc_and_delivery %}Yes{% else %}No{% endif %}</dd>
+      <dt>Contributes to Maternal Nutrition</dt><dd>{% if record.men_contribute_to_maternal_nutrition %}Yes{% else %}No{% endif %}</dd>
+      <dt>Knows Danger Signs</dt><dd>{% if record.male_partner_knows_danger_signs %}Yes{% else %}No{% endif %}</dd>
+      <dt>Reduced Harmful Gender Norms</dt><dd>{% if record.harmful_gender_norms_reduced %}Yes{% else %}No{% endif %}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">I. Adolescent and YFS</h3>
+    <dl class="detail-list">
+      <dt>Completed Recommended ANC Visits</dt><dd>{% if record.completed_recommended_anc_visits %}Yes{% else %}No{% endif %}</dd>
+      <dt>HIV Tested and Received Results</dt><dd>{% if record.adolescent_hiv_tested_and_received_results %}Yes{% else %}No{% endif %}</dd>
+      <dt>Linked to PMTCT</dt><dd>{% if record.adolescent_linked_to_pmtct %}Yes{% else %}No{% endif %}</dd>
+      <dt>Received SRHR Counseling</dt><dd>{% if record.adolescent_received_srhr_counseling %}Yes{% else %}No{% endif %}</dd>
+      <dt>Satisfied with ANC/YFS Services</dt><dd>{% if record.adolescent_satisfied_with_anc_yfs %}Yes{% else %}No{% endif %}</dd>
+      <dt>Reported Reduced Stigma</dt><dd>{% if record.adolescent_reported_reduced_stigma %}Yes{% else %}No{% endif %}</dd>
+      <dt>Facility Meets YFS Standards</dt><dd>{% if record.facility_meets_yfs_standards %}Yes{% else %}No{% endif %}</dd>
+      <dt>Provider Trained in YFS</dt><dd>{% if record.provider_trained_in_yfs %}Yes{% else %}No{% endif %}</dd>
+      <dt>Private Consultation Space</dt><dd>{% if record.private_confidential_consultation_space %}Yes{% else %}No{% endif %}</dd>
+      <dt>Average Wait Time</dt><dd>{% if record.adolescent_wait_time_minutes is not None %}{{ record.adolescent_wait_time_minutes }} minutes{% else %}-{% endif %}</dd>
+      <dt>Respectful Care</dt><dd>{% if record.adolescent_received_respectful_care %}Yes{% else %}No{% endif %}</dd>
+      <dt>Knows Early ANC and Danger Signs</dt><dd>{% if record.adolescent_knows_early_anc_and_danger_signs %}Yes{% else %}No{% endif %}</dd>
+      <dt>Early Disclosure and Care-Seeking</dt><dd>{% if record.adolescent_early_disclosure_and_care_seeking %}Yes{% else %}No{% endif %}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">J. Delivery</h3>
     <dl class="detail-list">
       <dt>Date of Delivery</dt><dd>{{ record.date_of_delivery|default:"-" }}</dd>
       <dt>Place</dt><dd>{{ record.get_place_of_delivery_display|default:"-" }}</dd>
@@ -91,7 +151,7 @@
   </div>
 
   <div class="card">
-    <h3 class="section-title">G. Postpartum</h3>
+    <h3 class="section-title">K. Postpartum</h3>
     <dl class="detail-list">
       <dt>Postpartum Check-up</dt><dd>{% if record.postpartum_checkup_done %}Done{% else %}Not done{% endif %}</dd>
       <dt>Breastfeeding</dt><dd>{{ record.get_breastfeeding_status_display|default:"-" }}</dd>

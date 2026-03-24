@@ -4,7 +4,7 @@ from surveys.utils import SyncConfigurationError, sync_unsynced_records
 
 
 class Command(BaseCommand):
-    help = 'Sync unsynced local records to the remote online server.'
+    help = 'Confirm that pending records are marked as saved on the local server.'
 
     def handle(self, *args, **options):
         try:

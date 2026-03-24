@@ -39,6 +39,8 @@ class MaternalRecordForm(forms.ModelForm):
             'hemoglobin_level': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01', 'min': 0}),
             'nutritional_status': forms.Select(attrs={'class': 'form-select'}),
             'tetanus_toxoid_status': forms.Select(attrs={'class': 'form-select'}),
+            'complication_other': forms.TextInput(attrs={'class': 'form-input'}),
+            'first_ultrasound_gestation_weeks': forms.NumberInput(attrs={'class': 'form-input', 'min': 0, 'max': 45}),
             'date_of_delivery': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
             'place_of_delivery': forms.Select(attrs={'class': 'form-select'}),
             'birth_attendant': forms.Select(attrs={'class': 'form-select'}),
@@ -50,6 +52,7 @@ class MaternalRecordForm(forms.ModelForm):
             'breastfeeding_status': forms.Select(attrs={'class': 'form-select'}),
             'family_planning_method': forms.Select(attrs={'class': 'form-select'}),
             'postpartum_complications': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 2}),
+            'adolescent_wait_time_minutes': forms.NumberInput(attrs={'class': 'form-input', 'min': 0}),
             'date_collected': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
             'notes': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3}),
         }

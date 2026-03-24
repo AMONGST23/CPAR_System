@@ -125,6 +125,50 @@ class MaternalRecord(models.Model):
     dental_checkup = models.BooleanField(default=False)
     family_planning_counseling = models.BooleanField(default=False)
 
+    # Section F: Ultrasound, Risk Detection, and Referral
+    ultrasound_before_24_weeks = models.BooleanField(default=False)
+    ultrasound_screened_high_risk = models.BooleanField(default=False)
+    complication_placenta_previa = models.BooleanField(default=False)
+    complication_multiple_gestation = models.BooleanField(default=False)
+    complication_breech = models.BooleanField(default=False)
+    complication_other = models.CharField(max_length=255, blank=True)
+    first_ultrasound_gestation_weeks = models.PositiveSmallIntegerField(null=True, blank=True)
+    high_risk_identified_through_ruaa = models.BooleanField(default=False)
+    referred_high_risk_pregnancy = models.BooleanField(default=False)
+    referral_completed = models.BooleanField(default=False)
+    referral_received_appropriate_care = models.BooleanField(default=False)
+
+    # Section G: Additional Nutrition Indicators
+    nutrition_counseling_received = models.BooleanField(default=False)
+    maternal_supplements_received = models.BooleanField(default=False)
+    severe_malnutrition_referred = models.BooleanField(default=False)
+
+    # Section H: Male Engagement
+    male_partner_accompanied_anc = models.BooleanField(default=False)
+    male_partner_participated_counseling = models.BooleanField(default=False)
+    male_partner_hiv_tested = models.BooleanField(default=False)
+    male_partner_hiv_positive_linked_to_art = models.BooleanField(default=False)
+    male_partner_supported_referral = models.BooleanField(default=False)
+    partner_support_for_anc_and_delivery = models.BooleanField(default=False)
+    men_contribute_to_maternal_nutrition = models.BooleanField(default=False)
+    male_partner_knows_danger_signs = models.BooleanField(default=False)
+    harmful_gender_norms_reduced = models.BooleanField(default=False)
+
+    # Section I: Adolescent and Youth-Friendly Services
+    completed_recommended_anc_visits = models.BooleanField(default=False)
+    adolescent_hiv_tested_and_received_results = models.BooleanField(default=False)
+    adolescent_linked_to_pmtct = models.BooleanField(default=False)
+    adolescent_received_srhr_counseling = models.BooleanField(default=False)
+    adolescent_satisfied_with_anc_yfs = models.BooleanField(default=False)
+    adolescent_reported_reduced_stigma = models.BooleanField(default=False)
+    facility_meets_yfs_standards = models.BooleanField(default=False)
+    provider_trained_in_yfs = models.BooleanField(default=False)
+    private_confidential_consultation_space = models.BooleanField(default=False)
+    adolescent_wait_time_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
+    adolescent_received_respectful_care = models.BooleanField(default=False)
+    adolescent_knows_early_anc_and_danger_signs = models.BooleanField(default=False)
+    adolescent_early_disclosure_and_care_seeking = models.BooleanField(default=False)
+
     # Section F: Delivery Information
     date_of_delivery = models.DateField(null=True, blank=True)
 

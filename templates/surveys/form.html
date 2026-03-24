@@ -27,8 +27,12 @@
     <button type="button" class="tab {% if active_section == 'sec-c' %}active{% endif %}" data-tab="sec-c">C. Current Pregnancy</button>
     <button type="button" class="tab {% if active_section == 'sec-d' %}active{% endif %}" data-tab="sec-d">D. Health Assessment</button>
     <button type="button" class="tab {% if active_section == 'sec-e' %}active{% endif %}" data-tab="sec-e">E. Services</button>
-    <button type="button" class="tab {% if active_section == 'sec-f' %}active{% endif %}" data-tab="sec-f">F. Delivery</button>
-    <button type="button" class="tab {% if active_section == 'sec-g' %}active{% endif %}" data-tab="sec-g">G. Postpartum</button>
+    <button type="button" class="tab {% if active_section == 'sec-f' %}active{% endif %}" data-tab="sec-f">F. Ultrasound & Referral</button>
+    <button type="button" class="tab {% if active_section == 'sec-g' %}active{% endif %}" data-tab="sec-g">G. Nutrition</button>
+    <button type="button" class="tab {% if active_section == 'sec-h' %}active{% endif %}" data-tab="sec-h">H. Male Engagement</button>
+    <button type="button" class="tab {% if active_section == 'sec-i' %}active{% endif %}" data-tab="sec-i">I. Adolescent / YFS</button>
+    <button type="button" class="tab {% if active_section == 'sec-j' %}active{% endif %}" data-tab="sec-j">J. Delivery</button>
+    <button type="button" class="tab {% if active_section == 'sec-k' %}active{% endif %}" data-tab="sec-k">K. Postpartum</button>
   </div>
 
   <div class="tab-panel {% if active_section == 'sec-a' or not active_section %}active{% endif %}" id="sec-a">
@@ -65,7 +69,7 @@
       </div>
       <div class="form-grid">
         <div class="form-group">
-          <label class="form-label">Barangay</label>
+          <label class="form-label">Region</label>
           {{ form.address_barangay }}
         </div>
         <div class="form-group">
@@ -216,7 +220,90 @@
 
   <div class="tab-panel {% if active_section == 'sec-f' %}active{% endif %}" id="sec-f">
     <div class="card">
-      <h3 class="section-title">F. Delivery Information</h3>
+      <h3 class="section-title">F. Ultrasound, Risk Detection, and Referral</h3>
+      <div class="checkbox-group">
+        <label class="checkbox-label">{{ form.ultrasound_before_24_weeks }} Received at least one ultrasound before 24 weeks gestation</label>
+        <label class="checkbox-label">{{ form.ultrasound_screened_high_risk }} Screened for high-risk conditions using ultrasound</label>
+        <label class="checkbox-label">{{ form.high_risk_identified_through_ruaa }} High-risk pregnancy identified through RUAA</label>
+        <label class="checkbox-label">{{ form.referred_high_risk_pregnancy }} High-risk pregnancy referred to a higher-level facility</label>
+        <label class="checkbox-label">{{ form.referral_completed }} Reached the referral facility after referral</label>
+        <label class="checkbox-label">{{ form.referral_received_appropriate_care }} Received appropriate care at referral facility</label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Gestational Age at First Ultrasound (weeks)</label>
+          {{ form.first_ultrasound_gestation_weeks }}
+        </div>
+      </div>
+      <div class="checkbox-group">
+        <label class="checkbox-label">{{ form.complication_placenta_previa }} Placenta previa detected</label>
+        <label class="checkbox-label">{{ form.complication_multiple_gestation }} Multiple gestation detected</label>
+        <label class="checkbox-label">{{ form.complication_breech }} Breech presentation detected</label>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Other Detected Pregnancy Complications</label>
+        {{ form.complication_other }}
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel {% if active_section == 'sec-g' %}active{% endif %}" id="sec-g">
+    <div class="card">
+      <h3 class="section-title">G. Nutrition</h3>
+      <div class="checkbox-group">
+        <label class="checkbox-label">{{ form.nutrition_counseling_received }} Received nutrition counseling</label>
+        <label class="checkbox-label">{{ form.maternal_supplements_received }} Received supplements</label>
+        <label class="checkbox-label">{{ form.severe_malnutrition_referred }} Referred for severe malnutrition</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel {% if active_section == 'sec-h' %}active{% endif %}" id="sec-h">
+    <div class="card">
+      <h3 class="section-title">H. Male Engagement</h3>
+      <div class="checkbox-group">
+        <label class="checkbox-label">{{ form.male_partner_accompanied_anc }} Male partner accompanied pregnant woman to at least one ANC visit</label>
+        <label class="checkbox-label">{{ form.male_partner_participated_counseling }} Male partner participated in ultrasound/ANC counseling</label>
+        <label class="checkbox-label">{{ form.male_partner_hiv_tested }} Male partner tested for HIV</label>
+        <label class="checkbox-label">{{ form.male_partner_hiv_positive_linked_to_art }} HIV-positive male partner linked to ART</label>
+        <label class="checkbox-label">{{ form.male_partner_supported_referral }} Male partner supported referral compliance for high-risk pregnancy</label>
+        <label class="checkbox-label">{{ form.partner_support_for_anc_and_delivery }} Woman reported partner support for ANC attendance and facility delivery</label>
+        <label class="checkbox-label">{{ form.men_contribute_to_maternal_nutrition }} Men contribute to maternal nutrition (food or finances)</label>
+        <label class="checkbox-label">{{ form.male_partner_knows_danger_signs }} Male partner demonstrates knowledge of maternal danger signs</label>
+        <label class="checkbox-label">{{ form.harmful_gender_norms_reduced }} Reduced harmful gender norms reported</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel {% if active_section == 'sec-i' %}active{% endif %}" id="sec-i">
+    <div class="card">
+      <h3 class="section-title">I. Adolescent and Youth-Friendly Services</h3>
+      <div class="checkbox-group">
+        <label class="checkbox-label">{{ form.completed_recommended_anc_visits }} Completed recommended ANC visits</label>
+        <label class="checkbox-label">{{ form.adolescent_hiv_tested_and_received_results }} Adolescent tested for HIV and received results</label>
+        <label class="checkbox-label">{{ form.adolescent_linked_to_pmtct }} Adolescent mother linked to PMTCT services</label>
+        <label class="checkbox-label">{{ form.adolescent_received_srhr_counseling }} Adolescent received comprehensive SRHR counseling</label>
+        <label class="checkbox-label">{{ form.adolescent_satisfied_with_anc_yfs }} Adolescent reported satisfaction with ANC/YFS services</label>
+        <label class="checkbox-label">{{ form.adolescent_reported_reduced_stigma }} Adolescent reported reduced stigma when accessing services</label>
+        <label class="checkbox-label">{{ form.facility_meets_yfs_standards }} Health facility meets youth-friendly service standards</label>
+        <label class="checkbox-label">{{ form.provider_trained_in_yfs }} Provider trained in adolescent/youth-friendly service delivery</label>
+        <label class="checkbox-label">{{ form.private_confidential_consultation_space }} Private/confidential consultation space available</label>
+        <label class="checkbox-label">{{ form.adolescent_received_respectful_care }} Adolescent reported respectful, non-judgmental care</label>
+        <label class="checkbox-label">{{ form.adolescent_knows_early_anc_and_danger_signs }} Adolescent has knowledge of early ANC and danger signs</label>
+        <label class="checkbox-label">{{ form.adolescent_early_disclosure_and_care_seeking }} Early pregnancy disclosure and care-seeking reported</label>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Average Waiting Time for Adolescent Client (minutes)</label>
+          {{ form.adolescent_wait_time_minutes }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel {% if active_section == 'sec-j' %}active{% endif %}" id="sec-j">
+    <div class="card">
+      <h3 class="section-title">J. Delivery Information</h3>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">Date of Delivery</label>
@@ -256,9 +343,9 @@
     </div>
   </div>
 
-  <div class="tab-panel {% if active_section == 'sec-g' %}active{% endif %}" id="sec-g">
+  <div class="tab-panel {% if active_section == 'sec-k' %}active{% endif %}" id="sec-k">
     <div class="card">
-      <h3 class="section-title">G. Postpartum</h3>
+      <h3 class="section-title">K. Postpartum</h3>
       <div class="checkbox-group">
         <label class="checkbox-label">{{ form.postpartum_checkup_done }} Postpartum Check-up Done</label>
       </div>

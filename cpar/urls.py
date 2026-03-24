@@ -24,6 +24,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('surveys/', include('surveys.urls')),
-    path('api/', include('surveys.api_urls')),
     path('', RedirectView.as_view(url='/surveys/', permanent=False)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

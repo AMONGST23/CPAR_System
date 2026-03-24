@@ -1,5 +1,4 @@
 import datetime
-from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
@@ -71,10 +70,7 @@ class SyncWorkflowTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='agent2', password='secret123')
 
-    @patch('surveys.utils.settings.REMOTE_SYNC_URL', 'https://example.com/api/sync/')
-    @patch('surveys.utils.settings.REMOTE_SYNC_TOKEN', 'token-123')
-    @patch('surveys.utils.urllib.request.urlopen')
-    def test_sync_marks_only_returned_records_as_synced(self, mock_urlopen):
+    def test_sync_marks_all_pending_records_as_saved_locally(self):
         first = MaternalRecord.objects.create(
             last_name='One',
             first_name='Jane',
@@ -88,21 +84,16 @@ class SyncWorkflowTests(TestCase):
             agent=self.user,
         )
 
-        response = mock_urlopen.return_value.__enter__.return_value
-        response.read.return_value = (
-            '{"sync_uuids": ["%s"], "errors": [{"sync_uuid": "%s", "errors": {"field": ["bad"]}}]}'
-            % (first.sync_uuid, second.sync_uuid)
-        ).encode()
-
         result = sync_unsynced_records()
 
         first.refresh_from_db()
         second.refresh_from_db()
 
-        self.assertEqual(result['status'], 'partial')
+        self.assertEqual(result['status'], 'ok')
         self.assertTrue(first.is_synced)
-        self.assertFalse(second.is_synced)
+        self.assertTrue(second.is_synced)
         self.assertEqual(SyncLog.objects.count(), 1)
+        self.assertEqual(result['synced'], 2)
 
 
 class EncryptionTests(TestCase):

@@ -11,7 +11,7 @@ from .forms import MaternalRecordForm
 from .models import MaternalRecord, SyncLog
 from .utils import SyncConfigurationError, sync_unsynced_records
 
-SECTION_SEQUENCE = ['sec-a', 'sec-b', 'sec-c', 'sec-d', 'sec-e', 'sec-f', 'sec-g']
+SECTION_SEQUENCE = ['sec-a', 'sec-b', 'sec-c', 'sec-d', 'sec-e', 'sec-f', 'sec-g', 'sec-h', 'sec-i', 'sec-j', 'sec-k']
 
 
 def _normalize_section(section_name):
@@ -46,7 +46,7 @@ def record_list(request):
     last_sync = SyncLog.objects.first()
     system_status = {
         'encryption_configured': bool(getattr(settings, 'FIELD_ENCRYPTION_KEY', '')),
-        'remote_sync_configured': bool(getattr(settings, 'REMOTE_SYNC_URL', '')),
+        'local_storage_ready': True,
     }
     return render(request, 'surveys/list.html', {
         'records': records,
@@ -66,6 +66,7 @@ def record_create(request):
         if form.is_valid():
             record = form.save(commit=False)
             record.agent = request.user
+            record.is_synced = True
             record.save()
             submit_action = request.POST.get('submit_action', 'continue')
             if submit_action == 'exit':
@@ -104,7 +105,7 @@ def record_edit(request, pk):
         active_section = _normalize_section(request.POST.get('current_section'))
         if form.is_valid():
             updated = form.save(commit=False)
-            updated.is_synced = False
+            updated.is_synced = True
             updated.save()
             submit_action = request.POST.get('submit_action', 'continue')
             if submit_action == 'exit':

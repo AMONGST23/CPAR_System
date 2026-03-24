@@ -15,15 +15,15 @@ class Command(BaseCommand):
 
         self.stdout.write('CPAR system status')
         self.stdout.write(f'Database engine: {db_engine}')
-        self.stdout.write(f'Remote sync configured: {"yes" if getattr(settings, "REMOTE_SYNC_URL", "") else "no"}')
+        self.stdout.write('Local storage mode: yes')
         self.stdout.write(f'Encryption configured: {"yes" if getattr(settings, "FIELD_ENCRYPTION_KEY", "") else "no"}')
         self.stdout.write(f'Total records: {total_records}')
-        self.stdout.write(f'Unsynced records: {unsynced_records}')
+        self.stdout.write(f'Pending local confirmation: {unsynced_records}')
 
         if last_sync:
             self.stdout.write(
-                f'Last sync: {last_sync.get_status_display()} at {last_sync.started_at:%Y-%m-%d %H:%M}'
+                f'Last local save check: {last_sync.get_status_display()} at {last_sync.started_at:%Y-%m-%d %H:%M}'
             )
-            self.stdout.write(f'Last sync message: {last_sync.message}')
+            self.stdout.write(f'Last local save message: {last_sync.message}')
         else:
-            self.stdout.write('Last sync: none')
+            self.stdout.write('Last local save check: none')
