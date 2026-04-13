@@ -35,14 +35,14 @@ class MaternalRecord(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     age = models.PositiveSmallIntegerField(null=True, blank=True)
 
-    CIVIL_STATUS_CHOICES = [
+    MARITAL_STATUS_CHOICES = [
         ('single', 'Single'),
         ('married', 'Married'),
         ('widowed', 'Widowed'),
         ('separated', 'Separated'),
         ('live_in', 'Live-in'),
     ]
-    civil_status = models.CharField(max_length=20, choices=CIVIL_STATUS_CHOICES, blank=True)
+    civil_status = models.CharField(max_length=20, choices=MARITAL_STATUS_CHOICES, blank=True)
 
     address_barangay = models.CharField(max_length=100, blank=True)
     address_municipality = models.CharField(max_length=100, blank=True)
@@ -126,6 +126,18 @@ class MaternalRecord(models.Model):
     family_planning_counseling = models.BooleanField(default=False)
 
     # Section F: Ultrasound, Risk Detection, and Referral
+    first_ultrasound_current_pregnancy = models.BooleanField(default=False)
+    previous_pregnancies_with_ultrasound = models.BooleanField(default=False)
+    previous_pregnancies_with_ultrasound_count = models.PositiveSmallIntegerField(null=True, blank=True)
+    ultrasound_service_helpful = models.BooleanField(default=False)
+    benefit_saves_travel_time = models.BooleanField(default=False)
+    benefit_reduces_transport_costs = models.BooleanField(default=False)
+    benefit_detects_problems_early = models.BooleanField(default=False)
+    benefit_understands_baby_health = models.BooleanField(default=False)
+    benefit_encourages_anc = models.BooleanField(default=False)
+    benefit_enables_early_referral = models.BooleanField(default=False)
+    benefit_knows_due_date = models.BooleanField(default=False)
+    benefit_other = models.CharField(max_length=255, blank=True)
     ultrasound_before_24_weeks = models.BooleanField(default=False)
     ultrasound_screened_high_risk = models.BooleanField(default=False)
     complication_placenta_previa = models.BooleanField(default=False)
@@ -133,41 +145,50 @@ class MaternalRecord(models.Model):
     complication_breech = models.BooleanField(default=False)
     complication_other = models.CharField(max_length=255, blank=True)
     first_ultrasound_gestation_weeks = models.PositiveSmallIntegerField(null=True, blank=True)
+    high_risk_pregnancy = models.BooleanField(default=False)
     high_risk_identified_through_ruaa = models.BooleanField(default=False)
     referred_high_risk_pregnancy = models.BooleanField(default=False)
     referral_completed = models.BooleanField(default=False)
     referral_received_appropriate_care = models.BooleanField(default=False)
+    referral_reason_obstetric_complication = models.BooleanField(default=False)
+    referral_reason_no_fetal_heartbeat = models.BooleanField(default=False)
+    referral_reason_malpresentation = models.BooleanField(default=False)
+    referral_reason_multiple_pregnancy = models.BooleanField(default=False)
+    referral_reason_hiv_related = models.BooleanField(default=False)
+    referral_reason_severe_anemia_malnutrition = models.BooleanField(default=False)
+    referral_reason_other = models.CharField(max_length=255, blank=True)
 
-    # Section G: Additional Nutrition Indicators
+    # Section G: GBV Response
+    gbv_asked_about_safety = models.BooleanField(default=False)
+    gbv_respectful_supportive_provider = models.BooleanField(default=False)
+    gbv_given_information_for_help = models.BooleanField(default=False)
+    gbv_offered_help_or_referral = models.BooleanField(null=True, blank=True)
+    gbv_felt_safe_discussing_issues = models.BooleanField(default=False)
+
+    # Section H: Nutrition
     nutrition_counseling_received = models.BooleanField(default=False)
     maternal_supplements_received = models.BooleanField(default=False)
     severe_malnutrition_referred = models.BooleanField(default=False)
+    nutrition_discussed_foods = models.BooleanField(default=False)
+    nutrition_advised_iron_folic = models.BooleanField(default=False)
+    nutrition_understands_important_foods = models.BooleanField(default=False)
+    nutrition_improved_diet_since_visit = models.BooleanField(default=False)
 
-    # Section H: Male Engagement
-    male_partner_accompanied_anc = models.BooleanField(default=False)
-    male_partner_participated_counseling = models.BooleanField(default=False)
-    male_partner_hiv_tested = models.BooleanField(default=False)
-    male_partner_hiv_positive_linked_to_art = models.BooleanField(default=False)
-    male_partner_supported_referral = models.BooleanField(default=False)
-    partner_support_for_anc_and_delivery = models.BooleanField(default=False)
-    men_contribute_to_maternal_nutrition = models.BooleanField(default=False)
-    male_partner_knows_danger_signs = models.BooleanField(default=False)
-    harmful_gender_norms_reduced = models.BooleanField(default=False)
+    # Section H: Family Planning and STI
+    fp_discussed_options = models.BooleanField(default=False)
+    fp_methods_explained_clearly = models.BooleanField(default=False)
+    fp_understands_post_delivery_options = models.BooleanField(default=False)
+    fp_given_opportunity_to_ask_questions = models.BooleanField(default=False)
+    sti_discussed_infections = models.BooleanField(default=False)
+    sti_asked_about_symptoms = models.BooleanField(default=False)
+    sti_advised_on_prevention = models.BooleanField(default=False)
+    sti_offered_testing_or_treatment = models.BooleanField(null=True, blank=True)
 
-    # Section I: Adolescent and Youth-Friendly Services
-    completed_recommended_anc_visits = models.BooleanField(default=False)
-    adolescent_hiv_tested_and_received_results = models.BooleanField(default=False)
-    adolescent_linked_to_pmtct = models.BooleanField(default=False)
-    adolescent_received_srhr_counseling = models.BooleanField(default=False)
-    adolescent_satisfied_with_anc_yfs = models.BooleanField(default=False)
-    adolescent_reported_reduced_stigma = models.BooleanField(default=False)
-    facility_meets_yfs_standards = models.BooleanField(default=False)
-    provider_trained_in_yfs = models.BooleanField(default=False)
-    private_confidential_consultation_space = models.BooleanField(default=False)
-    adolescent_wait_time_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
-    adolescent_received_respectful_care = models.BooleanField(default=False)
-    adolescent_knows_early_anc_and_danger_signs = models.BooleanField(default=False)
-    adolescent_early_disclosure_and_care_seeking = models.BooleanField(default=False)
+    # Section I: Cross-Cutting Client Experience
+    client_treated_with_respect = models.BooleanField(default=False)
+    client_explanations_clear = models.BooleanField(default=False)
+    client_visit_helped_understand_health = models.BooleanField(default=False)
+    client_most_helpful_feedback = models.TextField(blank=True)
 
     # Section F: Delivery Information
     date_of_delivery = models.DateField(null=True, blank=True)
@@ -248,9 +269,6 @@ class MaternalRecord(models.Model):
     def clean(self):
         errors = {}
 
-        if self.date_of_birth and self.date_collected and self.date_of_birth > self.date_collected:
-            errors['date_of_birth'] = 'Date of birth cannot be after the collection date.'
-
         if self.last_delivery_date and self.date_collected and self.last_delivery_date > self.date_collected:
             errors['last_delivery_date'] = 'Last delivery date cannot be after the collection date.'
 
@@ -273,6 +291,16 @@ class MaternalRecord(models.Model):
             ]
             if any(value not in (None, '', 0) for value in pregnancy_fields):
                 errors['is_currently_pregnant'] = 'Pregnancy details should only be filled for current pregnancies.'
+
+        if self.previous_pregnancies_with_ultrasound:
+            if self.previous_pregnancies_with_ultrasound_count in (None, ''):
+                errors['previous_pregnancies_with_ultrasound_count'] = (
+                    'Enter how many previous pregnancies included an ultrasound.'
+                )
+        elif self.previous_pregnancies_with_ultrasound_count not in (None, ''):
+            errors['previous_pregnancies_with_ultrasound'] = (
+                'Only enter a number if previous pregnancies included an ultrasound.'
+            )
 
         if errors:
             raise ValidationError(errors)

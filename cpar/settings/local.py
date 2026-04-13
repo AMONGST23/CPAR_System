@@ -10,5 +10,11 @@ DATABASES = {
     }
 }
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.ngrok-free.dev",
+    "https://*.ngrok-free.app",
+]
+
+
 # Allow all local network origins for tablet access
 CORS_ALLOW_ALL_ORIGINS = True

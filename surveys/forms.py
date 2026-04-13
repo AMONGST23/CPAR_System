@@ -7,11 +7,16 @@ from .models import MaternalRecord
 
 
 class MaternalRecordForm(forms.ModelForm):
+    YES_NO_NA_CHOICES = (
+        ('', 'Not applicable'),
+        ('true', 'Yes'),
+        ('false', 'No'),
+    )
+
     class Meta:
         model = MaternalRecord
         exclude = ['agent', 'sync_uuid', 'is_synced', 'created_at', 'updated_at']
         widgets = {
-            'date_of_birth': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
             'last_name': forms.TextInput(attrs={'class': 'form-input'}),
             'first_name': forms.TextInput(attrs={'class': 'form-input'}),
             'middle_name': forms.TextInput(attrs={'class': 'form-input'}),
@@ -39,20 +44,12 @@ class MaternalRecordForm(forms.ModelForm):
             'hemoglobin_level': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01', 'min': 0}),
             'nutritional_status': forms.Select(attrs={'class': 'form-select'}),
             'tetanus_toxoid_status': forms.Select(attrs={'class': 'form-select'}),
+            'previous_pregnancies_with_ultrasound_count': forms.NumberInput(attrs={'class': 'form-input', 'min': 0}),
             'complication_other': forms.TextInput(attrs={'class': 'form-input'}),
             'first_ultrasound_gestation_weeks': forms.NumberInput(attrs={'class': 'form-input', 'min': 0, 'max': 45}),
-            'date_of_delivery': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
-            'place_of_delivery': forms.Select(attrs={'class': 'form-select'}),
-            'birth_attendant': forms.Select(attrs={'class': 'form-select'}),
-            'delivery_type': forms.Select(attrs={'class': 'form-select'}),
-            'delivery_complications': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 2}),
-            'delivery_outcome': forms.Select(attrs={'class': 'form-select'}),
-            'baby_sex': forms.Select(attrs={'class': 'form-select'}),
-            'birth_weight_kg': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.001', 'min': 0}),
-            'breastfeeding_status': forms.Select(attrs={'class': 'form-select'}),
-            'family_planning_method': forms.Select(attrs={'class': 'form-select'}),
-            'postpartum_complications': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 2}),
-            'adolescent_wait_time_minutes': forms.NumberInput(attrs={'class': 'form-input', 'min': 0}),
+            'benefit_other': forms.TextInput(attrs={'class': 'form-input'}),
+            'referral_reason_other': forms.TextInput(attrs={'class': 'form-input'}),
+            'client_most_helpful_feedback': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3}),
             'date_collected': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
             'notes': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3}),
         }
@@ -64,6 +61,17 @@ class MaternalRecordForm(forms.ModelForm):
         self.fields['last_name'].required = True
         self.fields['first_name'].required = True
         self.fields['date_collected'].required = True
+        for field_name in ('gbv_offered_help_or_referral', 'sti_offered_testing_or_treatment'):
+            current_value = self.initial.get(field_name, getattr(self.instance, field_name, None))
+            initial_value = {True: 'true', False: 'false'}.get(current_value, '')
+            self.fields[field_name] = forms.TypedChoiceField(
+                choices=self.YES_NO_NA_CHOICES,
+                required=False,
+                coerce=lambda value: {'true': True, 'false': False}.get(value),
+                empty_value=None,
+                widget=forms.Select(attrs={'class': 'form-select'}),
+                initial=initial_value,
+            )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -75,12 +83,8 @@ class MaternalRecordForm(forms.ModelForm):
             cleaned_data['prenatal_visit_count'] = 0
             cleaned_data['prenatal_facility'] = ''
 
-        if (
-            cleaned_data.get('date_of_delivery')
-            and cleaned_data.get('delivery_outcome')
-            and not cleaned_data.get('delivery_type')
-        ):
-            self.add_error('delivery_type', 'Delivery type is required when delivery details are recorded.')
+        if not cleaned_data.get('previous_pregnancies_with_ultrasound'):
+            cleaned_data['previous_pregnancies_with_ultrasound_count'] = None
 
         return cleaned_data
 

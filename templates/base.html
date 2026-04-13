@@ -12,10 +12,6 @@
   <link rel="icon" href="{% static 'icons/icon-192.svg' %}" />
 </head>
 <body>
-  <div id="offline-banner" class="offline-banner hidden">
-    Connection to the server is down. Saved drafts remain on this device.
-  </div>
-
   {% if user.is_authenticated %}
   <nav class="navbar">
     <div class="nav-brand">

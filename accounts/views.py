@@ -27,8 +27,15 @@ def _is_admin_user(user):
     return user.is_authenticated and (user.is_staff or user.is_superuser)
 
 
-def _filter_records(query):
+def _filter_records(query, agent_id=None):
     records = list(MaternalRecord.objects.select_related('agent').all())
+
+    if agent_id:
+        records = [
+            record for record in records
+            if record.agent and str(record.agent_id) == str(agent_id)
+        ]
+
     if not query:
         return records
 
@@ -123,11 +130,21 @@ def admin_panel_view(request):
                 messages.error(request, str(error))
             return redirect('admin_panel')
 
-    q = request.GET.get('q', '')
-    records = _filter_records(q)
-
     users = User.objects.select_related('profile').order_by('username')
+    selected_agent_id = request.GET.get('agent', '').strip()
+    q = request.GET.get('q', '')
+    records = _filter_records(q, agent_id=selected_agent_id)
     sync_logs = SyncLog.objects.all()[:10]
+    agent_summaries = []
+    for listed_user in users:
+        record_count = MaternalRecord.objects.filter(agent=listed_user).count()
+        if record_count == 0 and not listed_user.is_staff:
+            continue
+        agent_summaries.append({
+            'user': listed_user,
+            'record_count': record_count,
+        })
+
     summary = {
         'users': users.count(),
         'records': MaternalRecord.objects.count(),
@@ -140,15 +157,18 @@ def admin_panel_view(request):
         'users': users,
         'records': records[:20],
         'sync_logs': sync_logs,
+        'agent_summaries': agent_summaries,
         'summary': summary,
         'q': request.GET.get('q', ''),
+        'selected_agent_id': selected_agent_id,
     })
 
 
 @user_passes_test(_is_admin_user)
 def admin_export_records_view(request):
     q = request.GET.get('q', '')
-    records = _filter_records(q)
+    selected_agent_id = request.GET.get('agent', '').strip()
+    records = _filter_records(q, agent_id=selected_agent_id)
 
     workbook = Workbook()
     worksheet = workbook.active
@@ -162,12 +182,11 @@ def admin_export_records_view(request):
         ('last_name', 'Last Name'),
         ('first_name', 'First Name'),
         ('middle_name', 'Middle Name'),
-        ('date_of_birth', 'Date of Birth'),
         ('age', 'Age'),
-        ('civil_status', 'Civil Status'),
+        ('civil_status', 'Marital Status'),
         ('address_barangay', 'Region'),
-        ('address_municipality', 'Municipality'),
-        ('address_province', 'Province'),
+        ('address_municipality', 'District'),
+        ('address_province', 'Village'),
         ('contact_number', 'Contact Number'),
         ('educational_attainment', 'Educational Attainment'),
         ('gravida', 'Gravida'),
@@ -192,6 +211,18 @@ def admin_export_records_view(request):
         ('vitamin_a_supplementation', 'Vitamin A Supplementation'),
         ('dental_checkup', 'Dental Check-up'),
         ('family_planning_counseling', 'Family Planning Counseling'),
+        ('first_ultrasound_current_pregnancy', 'First Ultrasound This Pregnancy'),
+        ('previous_pregnancies_with_ultrasound', 'Previous Pregnancies Included Ultrasound'),
+        ('previous_pregnancies_with_ultrasound_count', 'Number of Previous Pregnancies With Ultrasound'),
+        ('ultrasound_service_helpful', 'Ultrasound Service Helpful'),
+        ('benefit_saves_travel_time', 'Benefit: Saves Travel Time'),
+        ('benefit_reduces_transport_costs', 'Benefit: Reduces Transport Costs'),
+        ('benefit_detects_problems_early', 'Benefit: Detects Problems Early'),
+        ('benefit_understands_baby_health', 'Benefit: Improves Understanding of Baby Health'),
+        ('benefit_encourages_anc', 'Benefit: Encourages ANC Attendance'),
+        ('benefit_enables_early_referral', 'Benefit: Enables Early Referral'),
+        ('benefit_knows_due_date', 'Benefit: Helps Know Due Date'),
+        ('benefit_other', 'Other Ultrasound Benefit'),
         ('ultrasound_before_24_weeks', 'Ultrasound Before 24 Weeks'),
         ('ultrasound_screened_high_risk', 'Ultrasound High-Risk Screening'),
         ('complication_placenta_previa', 'Placenta Previa Detected'),
@@ -199,47 +230,42 @@ def admin_export_records_view(request):
         ('complication_breech', 'Breech Detected'),
         ('complication_other', 'Other Pregnancy Complications'),
         ('first_ultrasound_gestation_weeks', 'First Ultrasound Gestational Age (Weeks)'),
+        ('high_risk_pregnancy', 'High-Risk Pregnancy'),
         ('high_risk_identified_through_ruaa', 'High-Risk Identified Through RUAA'),
         ('referred_high_risk_pregnancy', 'Referred High-Risk Pregnancy'),
         ('referral_completed', 'Referral Completed'),
         ('referral_received_appropriate_care', 'Appropriate Referral Care Received'),
+        ('referral_reason_obstetric_complication', 'Referral Reason: Obstetric Complication'),
+        ('referral_reason_no_fetal_heartbeat', 'Referral Reason: No Fetal Heartbeat'),
+        ('referral_reason_malpresentation', 'Referral Reason: Malpresentation'),
+        ('referral_reason_multiple_pregnancy', 'Referral Reason: Multiple Pregnancy'),
+        ('referral_reason_hiv_related', 'Referral Reason: HIV-Related'),
+        ('referral_reason_severe_anemia_malnutrition', 'Referral Reason: Severe Anemia/Malnutrition'),
+        ('referral_reason_other', 'Referral Reason: Other'),
+        ('gbv_asked_about_safety', 'GBV: Asked About Safety'),
+        ('gbv_respectful_supportive_provider', 'GBV: Respectful and Supportive Provider'),
+        ('gbv_given_information_for_help', 'GBV: Given Information for Help'),
+        ('gbv_offered_help_or_referral', 'GBV: Offered Help or Referral'),
+        ('gbv_felt_safe_discussing_issues', 'GBV: Felt Safe Discussing Issues'),
         ('nutrition_counseling_received', 'Nutrition Counseling Received'),
         ('maternal_supplements_received', 'Maternal Supplements Received'),
         ('severe_malnutrition_referred', 'Severe Malnutrition Referred'),
-        ('male_partner_accompanied_anc', 'Male Partner Accompanied ANC'),
-        ('male_partner_participated_counseling', 'Male Partner Participated in Counseling'),
-        ('male_partner_hiv_tested', 'Male Partner HIV Tested'),
-        ('male_partner_hiv_positive_linked_to_art', 'Male Partner Linked to ART'),
-        ('male_partner_supported_referral', 'Male Partner Supported Referral'),
-        ('partner_support_for_anc_and_delivery', 'Partner Support for ANC and Facility Delivery'),
-        ('men_contribute_to_maternal_nutrition', 'Men Contribute to Maternal Nutrition'),
-        ('male_partner_knows_danger_signs', 'Male Partner Knows Danger Signs'),
-        ('harmful_gender_norms_reduced', 'Reduced Harmful Gender Norms'),
-        ('completed_recommended_anc_visits', 'Completed Recommended ANC Visits'),
-        ('adolescent_hiv_tested_and_received_results', 'Adolescent HIV Tested and Received Results'),
-        ('adolescent_linked_to_pmtct', 'Adolescent Linked to PMTCT'),
-        ('adolescent_received_srhr_counseling', 'Adolescent Received SRHR Counseling'),
-        ('adolescent_satisfied_with_anc_yfs', 'Adolescent Satisfied with ANC/YFS'),
-        ('adolescent_reported_reduced_stigma', 'Adolescent Reported Reduced Stigma'),
-        ('facility_meets_yfs_standards', 'Facility Meets YFS Standards'),
-        ('provider_trained_in_yfs', 'Provider Trained in YFS'),
-        ('private_confidential_consultation_space', 'Private Consultation Space'),
-        ('adolescent_wait_time_minutes', 'Adolescent Wait Time (Minutes)'),
-        ('adolescent_received_respectful_care', 'Adolescent Received Respectful Care'),
-        ('adolescent_knows_early_anc_and_danger_signs', 'Adolescent Knows Early ANC and Danger Signs'),
-        ('adolescent_early_disclosure_and_care_seeking', 'Adolescent Early Disclosure and Care-Seeking'),
-        ('date_of_delivery', 'Date of Delivery'),
-        ('place_of_delivery', 'Place of Delivery'),
-        ('birth_attendant', 'Birth Attendant'),
-        ('delivery_type', 'Delivery Type'),
-        ('delivery_complications', 'Delivery Complications'),
-        ('delivery_outcome', 'Delivery Outcome'),
-        ('baby_sex', 'Baby Sex'),
-        ('birth_weight_kg', 'Birth Weight (kg)'),
-        ('postpartum_checkup_done', 'Postpartum Check-up Done'),
-        ('breastfeeding_status', 'Breastfeeding Status'),
-        ('family_planning_method', 'Family Planning Method'),
-        ('postpartum_complications', 'Postpartum Complications'),
+        ('nutrition_discussed_foods', 'Nutrition: Discussed Foods'),
+        ('nutrition_advised_iron_folic', 'Nutrition: Advised Iron/Folic'),
+        ('nutrition_understands_important_foods', 'Nutrition: Understands Important Foods'),
+        ('nutrition_improved_diet_since_visit', 'Nutrition: Improved Diet Since Visit'),
+        ('fp_discussed_options', 'FP: Discussed Options'),
+        ('fp_methods_explained_clearly', 'FP: Methods Explained Clearly'),
+        ('fp_understands_post_delivery_options', 'FP: Understands Options After Delivery'),
+        ('fp_given_opportunity_to_ask_questions', 'FP: Opportunity to Ask Questions'),
+        ('sti_discussed_infections', 'STI: Discussed Infections'),
+        ('sti_asked_about_symptoms', 'STI: Asked About Symptoms'),
+        ('sti_advised_on_prevention', 'STI: Advised on Prevention'),
+        ('sti_offered_testing_or_treatment', 'STI: Offered Testing or Treatment'),
+        ('client_treated_with_respect', 'Client Experience: Treated With Respect'),
+        ('client_explanations_clear', 'Client Experience: Explanations Were Clear'),
+        ('client_visit_helped_understand_health', 'Client Experience: Visit Helped Understanding'),
+        ('client_most_helpful_feedback', 'Client Experience: Most Helpful Feedback'),
         ('notes', 'Notes'),
         ('created_at', 'Created At'),
         ('updated_at', 'Updated At'),

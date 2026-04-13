@@ -108,11 +108,52 @@
 </div>
 
 <div class="card" style="margin-top: 1rem;">
+  <h3 class="section-title">Agent Record Summary</h3>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Agent</th>
+          <th>Username</th>
+          <th>Records Collected</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in agent_summaries %}
+        <tr>
+          <td>{{ item.user.get_full_name|default:"-" }}</td>
+          <td>{{ item.user.username }}</td>
+          <td>{{ item.record_count }}</td>
+          <td>
+            <a href="{% url 'admin_panel' %}?agent={{ item.user.id }}" class="btn btn--sm btn--outline">View Records</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4">No agent summaries available.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 1rem;">
   <h3 class="section-title">Records</h3>
   <form method="get" class="search-bar">
     <input type="search" name="q" value="{{ q }}" placeholder="Search records..." class="form-input search-input">
+    <select name="agent" class="form-select">
+      <option value="">All agents</option>
+      {% for listed_user in users %}
+      <option value="{{ listed_user.id }}"{% if selected_agent_id == listed_user.id|stringformat:"s" %} selected{% endif %}>
+        {{ listed_user.get_full_name|default:listed_user.username }}
+      </option>
+      {% endfor %}
+    </select>
     <button type="submit" class="btn btn--outline">Search</button>
-    <a href="{% url 'admin_export_records' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn--primary">Export to Excel</a>
+    {% if q or selected_agent_id %}<a href="{% url 'admin_panel' %}" class="btn btn--ghost">Clear</a>{% endif %}
+    <a href="{% url 'admin_export_records' %}?q={{ q|urlencode }}{% if selected_agent_id %}&agent={{ selected_agent_id|urlencode }}{% endif %}" class="btn btn--primary">Export to Excel</a>
   </form>
   <div class="table-wrapper">
     <table class="table">

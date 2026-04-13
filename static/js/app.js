@@ -1,17 +1,4 @@
 (function () {
-  const offlineBanner = document.getElementById('offline-banner');
-
-  function updateOnlineState() {
-    if (!offlineBanner) {
-      return;
-    }
-    offlineBanner.classList.toggle('hidden', navigator.onLine);
-  }
-
-  window.addEventListener('online', updateOnlineState);
-  window.addEventListener('offline', updateOnlineState);
-  updateOnlineState();
-
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('/static/js/service-worker.js').catch(function (error) {

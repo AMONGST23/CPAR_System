@@ -54,6 +54,32 @@ class MaternalRecordFormTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('lmp', form.errors)
 
+    def test_form_accepts_nullable_client_feedback_choices(self):
+        form = MaternalRecordForm(
+            data={
+                'last_name': 'Doe',
+                'first_name': 'Jane',
+                'date_collected': '2026-03-20',
+                'gbv_offered_help_or_referral': '',
+                'sti_offered_testing_or_treatment': 'false',
+            }
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertIsNone(form.cleaned_data['gbv_offered_help_or_referral'])
+        self.assertFalse(form.cleaned_data['sti_offered_testing_or_treatment'])
+
+    def test_previous_ultrasound_count_required_when_previous_ultrasound_is_yes(self):
+        form = MaternalRecordForm(
+            data={
+                'last_name': 'Doe',
+                'first_name': 'Jane',
+                'date_collected': '2026-03-20',
+                'previous_pregnancies_with_ultrasound': 'on',
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('previous_pregnancies_with_ultrasound_count', form.errors)
+
 
 class MaternalRecordModelTests(TestCase):
     def test_full_name_formats_middle_initial(self):

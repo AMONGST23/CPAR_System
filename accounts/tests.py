@@ -71,6 +71,7 @@ class AdminPanelTests(TestCase):
         worksheet = workbook.active
         headers = [cell.value for cell in worksheet[1]]
         self.assertIn('Region', headers)
+        self.assertIn('Marital Status', headers)
         self.assertIn('Ultrasound Before 24 Weeks', headers)
 
         first_row = [cell.value for cell in worksheet[2]]
@@ -82,3 +83,93 @@ class AdminPanelTests(TestCase):
         self.client.login(username='agent1', password='secret123')
         response = self.client.get(reverse('admin_export_records'))
         self.assertEqual(response.status_code, 302)
+
+    def test_admin_can_filter_records_by_agent(self):
+        second_agent = get_user_model().objects.create_user(
+            username='agent2',
+            password='secret123',
+            first_name='Second',
+            last_name='Agent',
+        )
+        MaternalRecord.objects.create(
+            last_name='Doe',
+            first_name='Jane',
+            date_collected='2026-03-24',
+            agent=self.agent_user,
+        )
+        MaternalRecord.objects.create(
+            last_name='Smith',
+            first_name='John',
+            date_collected='2026-03-24',
+            agent=second_agent,
+        )
+
+        self.client.login(username='admin1', password='secret123')
+        response = self.client.get(reverse('admin_panel'), {'agent': str(self.agent_user.id)})
+
+        self.assertEqual(response.status_code, 200)
+        records = list(response.context['records'])
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].agent, self.agent_user)
+
+    def test_excel_export_respects_agent_filter(self):
+        second_agent = get_user_model().objects.create_user(
+            username='agent2',
+            password='secret123',
+        )
+        MaternalRecord.objects.create(
+            last_name='Doe',
+            first_name='Jane',
+            date_collected='2026-03-24',
+            agent=self.agent_user,
+        )
+        MaternalRecord.objects.create(
+            last_name='Smith',
+            first_name='John',
+            date_collected='2026-03-24',
+            agent=second_agent,
+        )
+
+        self.client.login(username='admin1', password='secret123')
+        response = self.client.get(reverse('admin_export_records'), {'agent': str(self.agent_user.id)})
+
+        workbook = load_workbook(BytesIO(response.content))
+        worksheet = workbook.active
+        rows = list(worksheet.iter_rows(values_only=True))
+
+        self.assertEqual(len(rows), 2)
+        self.assertIn('Doe', rows[1])
+        self.assertNotIn('Smith', rows[1])
+
+    def test_admin_panel_shows_agent_record_summary(self):
+        second_agent = get_user_model().objects.create_user(
+            username='agent2',
+            password='secret123',
+        )
+        MaternalRecord.objects.create(
+            last_name='Doe',
+            first_name='Jane',
+            date_collected='2026-03-24',
+            agent=self.agent_user,
+        )
+        MaternalRecord.objects.create(
+            last_name='Smith',
+            first_name='John',
+            date_collected='2026-03-24',
+            agent=self.agent_user,
+        )
+        MaternalRecord.objects.create(
+            last_name='Brown',
+            first_name='Anne',
+            date_collected='2026-03-24',
+            agent=second_agent,
+        )
+
+        self.client.login(username='admin1', password='secret123')
+        response = self.client.get(reverse('admin_panel'))
+
+        self.assertEqual(response.status_code, 200)
+        summaries = response.context['agent_summaries']
+        summary_by_username = {item['user'].username: item['record_count'] for item in summaries}
+        self.assertEqual(summary_by_username['agent1'], 2)
+        self.assertEqual(summary_by_username['agent2'], 1)

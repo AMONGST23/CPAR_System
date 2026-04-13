@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 wp14">
+  <w:body>
+    <w:p><w:pPr><w:pStyle w:val="Title"/></w:pPr><w:r><w:t>CPAR Quick Start</w:t></w:r></w:p>
+    <w:p><w:r><w:t>This laptop acts as the local CPAR server for data collection.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>All tablets and phones must connect to the same Wi-Fi or hotspot as this laptop.</w:t></w:r></w:p>
+
+    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>1. First-Time Setup on a New Laptop</w:t></w:r></w:p>
+    <w:p><w:r><w:t>1. Copy the full CPAR_System folder from the flash drive to the laptop.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>2. Open the copied CPAR_System folder.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>3. Double-click install.bat.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>4. If Python is not installed yet, the Python installer will open automatically.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>5. Finish installing Python, then double-click install.bat again.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>6. Wait for installation to complete.</w:t></w:r></w:p>
+
+    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>2. Daily Startup</w:t></w:r></w:p>
+    <w:p><w:r><w:t>1. Open the CPAR_System folder.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>2. Double-click start_local.bat.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>3. Keep the server window open while the system is in use.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>4. On this laptop, open: http://127.0.0.1:8000</w:t></w:r></w:p>
+    <w:p><w:r><w:t>5. On tablets or phones, open the network address shown in the server window. Example: http://192.168.1.10:8000</w:t></w:r></w:p>
+
+    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>3. Daily Shutdown</w:t></w:r></w:p>
+    <w:p><w:r><w:t>1. Return to the server window.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>2. Press Ctrl+C.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>3. Double-click backup_db.bat.</w:t></w:r></w:p>
+
+    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>4. Important Rules</w:t></w:r></w:p>
+    <w:p><w:r><w:t>• Do not close the server window while staff are using the system.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>• Keep the laptop powered on while tablets are connected.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>• Make sure all devices are on the same Wi-Fi or hotspot.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>• If Windows Firewall asks for permission, allow access on the private/local network.</w:t></w:r></w:p>
+
+    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>5. If Something Goes Wrong</w:t></w:r></w:p>
+    <w:p><w:r><w:t>If the system does not start:</w:t></w:r></w:p>
+    <w:p><w:r><w:t>1. Double-click install.bat again.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>2. Then double-click start_local.bat.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>If tablets cannot connect:</w:t></w:r></w:p>
+    <w:p><w:r><w:t>1. Check that the laptop and tablets are on the same network.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>2. Check that the address typed on the tablet matches the one shown in the server window.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>3. Check that the server window is still open.</w:t></w:r></w:p>
+
+    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>6. Backup Location</w:t></w:r></w:p>
+    <w:p><w:r><w:t>Backups are stored in: CPAR_System\backup\</w:t></w:r></w:p>
+
+    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>7. Main Files to Use</w:t></w:r></w:p>
+    <w:p><w:r><w:t>• install.bat</w:t></w:r></w:p>
+    <w:p><w:r><w:t>• start_local.bat</w:t></w:r></w:p>
+    <w:p><w:r><w:t>• backup_db.bat</w:t></w:r></w:p>
+
+    <w:sectPr>
+      <w:pgSz w:w="12240" w:h="15840"/>
+      <w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/>
+    </w:sectPr>
+  </w:body>
+</w:document>

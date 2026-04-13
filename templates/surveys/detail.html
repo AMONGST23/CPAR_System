@@ -23,10 +23,9 @@
     <h3 class="section-title">A. Respondent Information</h3>
     <dl class="detail-list">
       <dt>Full Name</dt><dd>{{ record.last_name }}, {{ record.first_name }} {{ record.middle_name }}</dd>
-      <dt>Date of Birth</dt><dd>{{ record.date_of_birth|default:"-" }}</dd>
       <dt>Age</dt><dd>{{ record.age|default:"-" }}</dd>
-      <dt>Civil Status</dt><dd>{{ record.get_civil_status_display|default:"-" }}</dd>
-      <dt>Address</dt><dd>Region: {{ record.address_barangay|default:"-" }}, {{ record.address_municipality|default:"-" }}, {{ record.address_province|default:"-" }}</dd>
+      <dt>Marital Status</dt><dd>{{ record.get_civil_status_display|default:"-" }}</dd>
+      <dt>Address</dt><dd>Region: {{ record.address_barangay|default:"-" }}, District: {{ record.address_municipality|default:"-" }}, Village: {{ record.address_province|default:"-" }}</dd>
       <dt>Contact</dt><dd>{{ record.contact_number|default:"-" }}</dd>
       <dt>Education</dt><dd>{{ record.get_educational_attainment_display|default:"-" }}</dd>
     </dl>
@@ -79,9 +78,14 @@
   <div class="card">
     <h3 class="section-title">F. Ultrasound and Referral</h3>
     <dl class="detail-list">
+      <dt>First Ultrasound This Pregnancy</dt><dd>{% if record.first_ultrasound_current_pregnancy %}Yes{% else %}No{% endif %}</dd>
+      <dt>Previous Pregnancies Included Ultrasound</dt><dd>{% if record.previous_pregnancies_with_ultrasound %}Yes{% else %}No{% endif %}</dd>
+      <dt>Number of Previous Pregnancies With Ultrasound</dt><dd>{{ record.previous_pregnancies_with_ultrasound_count|default:"-" }}</dd>
+      <dt>Ultrasound Service Helpful</dt><dd>{% if record.ultrasound_service_helpful %}Yes{% else %}No{% endif %}</dd>
       <dt>Ultrasound Before 24 Weeks</dt><dd>{% if record.ultrasound_before_24_weeks %}Yes{% else %}No{% endif %}</dd>
       <dt>Ultrasound High-Risk Screening</dt><dd>{% if record.ultrasound_screened_high_risk %}Yes{% else %}No{% endif %}</dd>
       <dt>First Ultrasound Gestational Age</dt><dd>{% if record.first_ultrasound_gestation_weeks %}{{ record.first_ultrasound_gestation_weeks }} weeks{% else %}-{% endif %}</dd>
+      <dt>High-Risk Pregnancy</dt><dd>{% if record.high_risk_pregnancy %}Yes{% else %}No{% endif %}</dd>
       <dt>RUAA High-Risk Identified</dt><dd>{% if record.high_risk_identified_through_ruaa %}Yes{% else %}No{% endif %}</dd>
       <dt>Placenta Previa Detected</dt><dd>{% if record.complication_placenta_previa %}Yes{% else %}No{% endif %}</dd>
       <dt>Multiple Gestation Detected</dt><dd>{% if record.complication_multiple_gestation %}Yes{% else %}No{% endif %}</dd>
@@ -90,73 +94,47 @@
       <dt>Referred High-Risk Pregnancy</dt><dd>{% if record.referred_high_risk_pregnancy %}Yes{% else %}No{% endif %}</dd>
       <dt>Referral Completed</dt><dd>{% if record.referral_completed %}Yes{% else %}No{% endif %}</dd>
       <dt>Received Appropriate Referral Care</dt><dd>{% if record.referral_received_appropriate_care %}Yes{% else %}No{% endif %}</dd>
+      <dt>Other Benefit</dt><dd>{{ record.benefit_other|default:"-" }}</dd>
+      <dt>Other Referral Reason</dt><dd>{{ record.referral_reason_other|default:"-" }}</dd>
     </dl>
   </div>
 
   <div class="card">
-    <h3 class="section-title">G. Nutrition</h3>
+    <h3 class="section-title">G. GBV Response</h3>
+    <dl class="detail-list">
+      <dt>Asked Privately About Safety</dt><dd>{% if record.gbv_asked_about_safety %}Yes{% else %}No{% endif %}</dd>
+      <dt>Respectful and Supportive Provider</dt><dd>{% if record.gbv_respectful_supportive_provider %}Yes{% else %}No{% endif %}</dd>
+      <dt>Given Information for Help</dt><dd>{% if record.gbv_given_information_for_help %}Yes{% else %}No{% endif %}</dd>
+      <dt>Offered Help or Referral</dt><dd>{% if record.gbv_offered_help_or_referral is None %}Not applicable{% elif record.gbv_offered_help_or_referral %}Yes{% else %}No{% endif %}</dd>
+      <dt>Felt Safe Discussing Issues</dt><dd>{% if record.gbv_felt_safe_discussing_issues %}Yes{% else %}No{% endif %}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">H. Nutrition, Family Planning, and STI</h3>
     <dl class="detail-list">
       <dt>Nutrition Counseling</dt><dd>{% if record.nutrition_counseling_received %}Yes{% else %}No{% endif %}</dd>
-      <dt>Supplements Received</dt><dd>{% if record.maternal_supplements_received %}Yes{% else %}No{% endif %}</dd>
-      <dt>Referred for Severe Malnutrition</dt><dd>{% if record.severe_malnutrition_referred %}Yes{% else %}No{% endif %}</dd>
+      <dt>Advised Iron/Folic</dt><dd>{% if record.nutrition_advised_iron_folic %}Yes{% else %}No{% endif %}</dd>
+      <dt>Understands Important Foods</dt><dd>{% if record.nutrition_understands_important_foods %}Yes{% else %}No{% endif %}</dd>
+      <dt>Improved Diet Since Visit</dt><dd>{% if record.nutrition_improved_diet_since_visit %}Yes{% else %}No{% endif %}</dd>
+      <dt>Discussed Family Planning</dt><dd>{% if record.fp_discussed_options %}Yes{% else %}No{% endif %}</dd>
+      <dt>Methods Explained Clearly</dt><dd>{% if record.fp_methods_explained_clearly %}Yes{% else %}No{% endif %}</dd>
+      <dt>Understands Post-Delivery Options</dt><dd>{% if record.fp_understands_post_delivery_options %}Yes{% else %}No{% endif %}</dd>
+      <dt>Opportunity to Ask Questions</dt><dd>{% if record.fp_given_opportunity_to_ask_questions %}Yes{% else %}No{% endif %}</dd>
+      <dt>Discussed Infections</dt><dd>{% if record.sti_discussed_infections %}Yes{% else %}No{% endif %}</dd>
+      <dt>Asked About Symptoms</dt><dd>{% if record.sti_asked_about_symptoms %}Yes{% else %}No{% endif %}</dd>
+      <dt>Advised on Prevention</dt><dd>{% if record.sti_advised_on_prevention %}Yes{% else %}No{% endif %}</dd>
+      <dt>Offered Testing or Treatment</dt><dd>{% if record.sti_offered_testing_or_treatment is None %}Not applicable{% elif record.sti_offered_testing_or_treatment %}Yes{% else %}No{% endif %}</dd>
     </dl>
   </div>
 
   <div class="card">
-    <h3 class="section-title">H. Male Engagement</h3>
+    <h3 class="section-title">I. Cross-Cutting Client Experience</h3>
     <dl class="detail-list">
-      <dt>Accompanied ANC Visit</dt><dd>{% if record.male_partner_accompanied_anc %}Yes{% else %}No{% endif %}</dd>
-      <dt>Participated in Counseling</dt><dd>{% if record.male_partner_participated_counseling %}Yes{% else %}No{% endif %}</dd>
-      <dt>HIV Tested</dt><dd>{% if record.male_partner_hiv_tested %}Yes{% else %}No{% endif %}</dd>
-      <dt>Linked to ART</dt><dd>{% if record.male_partner_hiv_positive_linked_to_art %}Yes{% else %}No{% endif %}</dd>
-      <dt>Supported Referral</dt><dd>{% if record.male_partner_supported_referral %}Yes{% else %}No{% endif %}</dd>
-      <dt>Supported ANC and Facility Delivery</dt><dd>{% if record.partner_support_for_anc_and_delivery %}Yes{% else %}No{% endif %}</dd>
-      <dt>Contributes to Maternal Nutrition</dt><dd>{% if record.men_contribute_to_maternal_nutrition %}Yes{% else %}No{% endif %}</dd>
-      <dt>Knows Danger Signs</dt><dd>{% if record.male_partner_knows_danger_signs %}Yes{% else %}No{% endif %}</dd>
-      <dt>Reduced Harmful Gender Norms</dt><dd>{% if record.harmful_gender_norms_reduced %}Yes{% else %}No{% endif %}</dd>
-    </dl>
-  </div>
-
-  <div class="card">
-    <h3 class="section-title">I. Adolescent and YFS</h3>
-    <dl class="detail-list">
-      <dt>Completed Recommended ANC Visits</dt><dd>{% if record.completed_recommended_anc_visits %}Yes{% else %}No{% endif %}</dd>
-      <dt>HIV Tested and Received Results</dt><dd>{% if record.adolescent_hiv_tested_and_received_results %}Yes{% else %}No{% endif %}</dd>
-      <dt>Linked to PMTCT</dt><dd>{% if record.adolescent_linked_to_pmtct %}Yes{% else %}No{% endif %}</dd>
-      <dt>Received SRHR Counseling</dt><dd>{% if record.adolescent_received_srhr_counseling %}Yes{% else %}No{% endif %}</dd>
-      <dt>Satisfied with ANC/YFS Services</dt><dd>{% if record.adolescent_satisfied_with_anc_yfs %}Yes{% else %}No{% endif %}</dd>
-      <dt>Reported Reduced Stigma</dt><dd>{% if record.adolescent_reported_reduced_stigma %}Yes{% else %}No{% endif %}</dd>
-      <dt>Facility Meets YFS Standards</dt><dd>{% if record.facility_meets_yfs_standards %}Yes{% else %}No{% endif %}</dd>
-      <dt>Provider Trained in YFS</dt><dd>{% if record.provider_trained_in_yfs %}Yes{% else %}No{% endif %}</dd>
-      <dt>Private Consultation Space</dt><dd>{% if record.private_confidential_consultation_space %}Yes{% else %}No{% endif %}</dd>
-      <dt>Average Wait Time</dt><dd>{% if record.adolescent_wait_time_minutes is not None %}{{ record.adolescent_wait_time_minutes }} minutes{% else %}-{% endif %}</dd>
-      <dt>Respectful Care</dt><dd>{% if record.adolescent_received_respectful_care %}Yes{% else %}No{% endif %}</dd>
-      <dt>Knows Early ANC and Danger Signs</dt><dd>{% if record.adolescent_knows_early_anc_and_danger_signs %}Yes{% else %}No{% endif %}</dd>
-      <dt>Early Disclosure and Care-Seeking</dt><dd>{% if record.adolescent_early_disclosure_and_care_seeking %}Yes{% else %}No{% endif %}</dd>
-    </dl>
-  </div>
-
-  <div class="card">
-    <h3 class="section-title">J. Delivery</h3>
-    <dl class="detail-list">
-      <dt>Date of Delivery</dt><dd>{{ record.date_of_delivery|default:"-" }}</dd>
-      <dt>Place</dt><dd>{{ record.get_place_of_delivery_display|default:"-" }}</dd>
-      <dt>Birth Attendant</dt><dd>{{ record.get_birth_attendant_display|default:"-" }}</dd>
-      <dt>Delivery Type</dt><dd>{{ record.get_delivery_type_display|default:"-" }}</dd>
-      <dt>Outcome</dt><dd>{{ record.get_delivery_outcome_display|default:"-" }}</dd>
-      <dt>Baby Sex</dt><dd>{{ record.get_baby_sex_display|default:"-" }}</dd>
-      <dt>Birth Weight</dt><dd>{% if record.birth_weight_kg %}{{ record.birth_weight_kg }} kg{% else %}-{% endif %}</dd>
-      <dt>Complications</dt><dd>{{ record.delivery_complications|default:"None" }}</dd>
-    </dl>
-  </div>
-
-  <div class="card">
-    <h3 class="section-title">K. Postpartum</h3>
-    <dl class="detail-list">
-      <dt>Postpartum Check-up</dt><dd>{% if record.postpartum_checkup_done %}Done{% else %}Not done{% endif %}</dd>
-      <dt>Breastfeeding</dt><dd>{{ record.get_breastfeeding_status_display|default:"-" }}</dd>
-      <dt>Family Planning Method</dt><dd>{{ record.get_family_planning_method_display|default:"-" }}</dd>
-      <dt>Complications</dt><dd>{{ record.postpartum_complications|default:"None" }}</dd>
+      <dt>Treated With Respect</dt><dd>{% if record.client_treated_with_respect %}Yes{% else %}No{% endif %}</dd>
+      <dt>Explanations Were Clear</dt><dd>{% if record.client_explanations_clear %}Yes{% else %}No{% endif %}</dd>
+      <dt>Visit Helped Understanding</dt><dd>{% if record.client_visit_helped_understand_health %}Yes{% else %}No{% endif %}</dd>
+      <dt>Most Helpful Feedback</dt><dd>{{ record.client_most_helpful_feedback|default:"-" }}</dd>
     </dl>
   </div>
 

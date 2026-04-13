@@ -11,7 +11,7 @@ from .forms import MaternalRecordForm
 from .models import MaternalRecord, SyncLog
 from .utils import SyncConfigurationError, sync_unsynced_records
 
-SECTION_SEQUENCE = ['sec-a', 'sec-b', 'sec-c', 'sec-d', 'sec-e', 'sec-f', 'sec-g', 'sec-h', 'sec-i', 'sec-j', 'sec-k']
+SECTION_SEQUENCE = ['sec-a', 'sec-b', 'sec-c', 'sec-d', 'sec-e', 'sec-f', 'sec-g', 'sec-h', 'sec-i']
 
 
 def _normalize_section(section_name):
