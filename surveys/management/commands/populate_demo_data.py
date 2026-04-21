@@ -30,8 +30,11 @@ class Command(BaseCommand):
     FP_METHODS = ['none', 'pills', 'condom', 'injectable', 'implant']
     TT_STATUSES = ['none', 'tt1', 'tt2', 'tt3', 'tt4']
     CIVIL_STATUSES = ['single', 'married', 'live_in']
-    EDUCATION_LEVELS = ['elementary', 'high_school', 'senior_high', 'college']
+    OCCUPATIONS = ['farmer', 'employed', 'self_employed', 'not_employed']
     DELIVERY_TYPES = ['svd', 'cs']
+    LAST_DELIVERY_LOCATIONS = ['health_facility', 'home']
+    HOME_DELIVERY_SUPPORT = ['tba', 'self']
+    ANTENATAL_FACILITIES = ['dispensary', 'health_center', 'hospital']
     PLACE_OF_DELIVERY = ['hospital', 'rhu', 'lying_in']
     BIRTH_ATTENDANTS = ['doctor', 'midwife']
     DELIVERY_OUTCOMES = ['live_birth', 'live_birth', 'live_birth', 'stillbirth']
@@ -99,6 +102,8 @@ class Command(BaseCommand):
                 has_delivery_info = (record_index % 3) == 0
                 first_ultrasound_weeks = 10 + (record_index % 10) if is_pregnant else None
                 high_risk = (record_index % 5) == 0
+                home_delivery = has_delivery_info and (record_index % 4 == 0)
+                gbv_encountered = (record_index % 6) == 0
 
                 MaternalRecord.objects.create(
                     agent=user,
@@ -113,24 +118,28 @@ class Command(BaseCommand):
                     address_municipality=self.MUNICIPALITIES[(index + record_index) % len(self.MUNICIPALITIES)],
                     address_province=self.PROVINCES[(index - 1) % len(self.PROVINCES)],
                     contact_number=f'07123{index:01d}{record_index:04d}',
-                    educational_attainment=self.EDUCATION_LEVELS[record_index % len(self.EDUCATION_LEVELS)],
+                    occupation=self.OCCUPATIONS[record_index % len(self.OCCUPATIONS)],
                     gravida=gravida,
                     para=para,
                     abortion=record_index % 2,
                     living_children=para,
                     last_delivery_date=last_delivery_date,
                     last_delivery_type=self.DELIVERY_TYPES[record_index % len(self.DELIVERY_TYPES)],
+                    last_delivery_location=self.LAST_DELIVERY_LOCATIONS[1 if home_delivery else 0] if has_delivery_info else '',
+                    home_delivery_support=self.HOME_DELIVERY_SUPPORT[record_index % len(self.HOME_DELIVERY_SUPPORT)] if home_delivery else '',
                     is_currently_pregnant=is_pregnant,
                     lmp=(date_collected - timedelta(days=(first_ultrasound_weeks or 12) * 7)) if is_pregnant else None,
                     age_of_gestation_weeks=(12 + (record_index % 24)) if is_pregnant else None,
                     expected_date_of_delivery=(date_collected + timedelta(days=140 - (record_index % 30))) if is_pregnant else None,
                     prenatal_visit_count=prenatal_visits,
-                    prenatal_facility=f'{region} Health Centre',
+                    prenatal_facility=self.ANTENATAL_FACILITIES[record_index % len(self.ANTENATAL_FACILITIES)],
                     weight_kg=55 + (record_index % 15),
                     height_cm=150 + (record_index % 20),
                     blood_pressure=f'{110 + (record_index % 20)}/{70 + (record_index % 10)}',
                     hemoglobin_level=10 + ((record_index % 5) * 0.5),
                     nutritional_status=self.NUTRITION[record_index % len(self.NUTRITION)],
+                    pmtct_checked=(record_index % 2) == 0,
+                    stds_checked=(record_index % 7) == 0,
                     tetanus_toxoid_status=self.TT_STATUSES[record_index % len(self.TT_STATUSES)],
                     iron_supplementation=(record_index % 2) == 0,
                     vitamin_a_supplementation=(record_index % 4) == 0,
@@ -141,7 +150,6 @@ class Command(BaseCommand):
                     previous_pregnancies_with_ultrasound_count=(gravida - 1) if (gravida > 1 and (record_index % 2 == 0)) else None,
                     ultrasound_service_helpful=(record_index % 5) != 0,
                     benefit_saves_travel_time=(record_index % 2) == 0,
-                    benefit_reduces_transport_costs=(record_index % 3) == 0,
                     benefit_detects_problems_early=(record_index % 2) == 0,
                     benefit_understands_baby_health=(record_index % 4) != 0,
                     benefit_encourages_anc=(record_index % 3) != 1,
@@ -156,22 +164,18 @@ class Command(BaseCommand):
                     complication_other='Anemia risk noted' if (record_index % 7 == 0) else '',
                     first_ultrasound_gestation_weeks=first_ultrasound_weeks,
                     high_risk_pregnancy=high_risk,
-                    high_risk_identified_through_ruaa=high_risk,
                     referred_high_risk_pregnancy=high_risk,
-                    referral_completed=high_risk and (record_index % 2 == 0),
-                    referral_received_appropriate_care=high_risk and (record_index % 2 == 0),
-                    referral_reason_obstetric_complication=high_risk and (record_index % 2 == 0),
-                    referral_reason_no_fetal_heartbeat=high_risk and (record_index % 11 == 0),
+                    referral_reason_ectopic_pregnancy=high_risk and (record_index % 11 == 0),
+                    referral_reason_placental_abnormalities=high_risk and (record_index % 2 == 0),
+                    referral_reason_amniotic_fluid_disorders=high_risk and (record_index % 5 == 0),
                     referral_reason_malpresentation=high_risk and (record_index % 4 == 0),
-                    referral_reason_multiple_pregnancy=high_risk and (record_index % 3 == 0),
-                    referral_reason_hiv_related=high_risk and (record_index % 13 == 0),
-                    referral_reason_severe_anemia_malnutrition=high_risk and (record_index % 5 == 0),
+                    referral_reason_uterine_pathologies=high_risk and (record_index % 3 == 0),
+                    referral_reason_fetal_distress=high_risk and (record_index % 6 == 0),
                     referral_reason_other='Reduced fetal movement' if high_risk and (record_index % 9 == 0) else '',
-                    gbv_asked_about_safety=(record_index % 3) == 0,
-                    gbv_respectful_supportive_provider=(record_index % 4) != 0,
-                    gbv_given_information_for_help=(record_index % 5) == 0,
-                    gbv_offered_help_or_referral=None if (record_index % 6 == 0) else ((record_index % 2) == 0),
-                    gbv_felt_safe_discussing_issues=(record_index % 3) != 1,
+                    gbv_encountered=gbv_encountered,
+                    gbv_shared_concern=gbv_encountered and (record_index % 2) == 0,
+                    gbv_given_information_for_help=gbv_encountered and (record_index % 5) == 0,
+                    gbv_offered_help_or_referral=((record_index % 2) == 0) if gbv_encountered else None,
                     nutrition_counseling_received=(record_index % 2) == 0,
                     maternal_supplements_received=(record_index % 3) != 0,
                     severe_malnutrition_referred=(record_index % 10) == 0,

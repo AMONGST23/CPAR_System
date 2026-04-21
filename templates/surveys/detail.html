@@ -27,17 +27,19 @@
       <dt>Marital Status</dt><dd>{{ record.get_civil_status_display|default:"-" }}</dd>
       <dt>Address</dt><dd>Region: {{ record.address_barangay|default:"-" }}, District: {{ record.address_municipality|default:"-" }}, Village: {{ record.address_province|default:"-" }}</dd>
       <dt>Contact</dt><dd>{{ record.contact_number|default:"-" }}</dd>
-      <dt>Education</dt><dd>{{ record.get_educational_attainment_display|default:"-" }}</dd>
+      <dt>Occupation</dt><dd>{{ record.get_occupation_display|default:"-" }}</dd>
     </dl>
   </div>
 
   <div class="card">
     <h3 class="section-title">B. Obstetric History</h3>
     <dl class="detail-list">
-      <dt>G/P/A</dt><dd>G{{ record.gravida|default:"?" }} P{{ record.para|default:"?" }} A{{ record.abortion|default:"?" }}</dd>
+      <dt>G/P/M</dt><dd>G{{ record.gravida|default:"?" }} P{{ record.para|default:"?" }} M{{ record.abortion|default:"?" }}</dd>
       <dt>Living Children</dt><dd>{{ record.living_children|default:"-" }}</dd>
       <dt>Last Delivery</dt><dd>{{ record.last_delivery_date|default:"-" }}</dd>
       <dt>Last Delivery Type</dt><dd>{{ record.get_last_delivery_type_display|default:"-" }}</dd>
+      <dt>Last Delivery Location</dt><dd>{{ record.get_last_delivery_location_display|default:"-" }}</dd>
+      <dt>Home Delivery Support</dt><dd>{{ record.get_home_delivery_support_display|default:"-" }}</dd>
     </dl>
   </div>
 
@@ -48,8 +50,8 @@
       <dt>LMP</dt><dd>{{ record.lmp|default:"-" }}</dd>
       <dt>Age of Gestation</dt><dd>{% if record.age_of_gestation_weeks %}{{ record.age_of_gestation_weeks }} weeks{% else %}-{% endif %}</dd>
       <dt>EDD</dt><dd>{{ record.expected_date_of_delivery|default:"-" }}</dd>
-      <dt>Prenatal Visits</dt><dd>{{ record.prenatal_visit_count|default:"0" }}</dd>
-      <dt>Prenatal Facility</dt><dd>{{ record.prenatal_facility|default:"-" }}</dd>
+      <dt>Antenatal Visit/Contact</dt><dd>{{ record.prenatal_visit_count|default:"0" }}</dd>
+      <dt>Antenatal Facility/Health Facility</dt><dd>{{ record.get_prenatal_facility_display|default:"-" }}</dd>
     </dl>
   </div>
 
@@ -59,8 +61,9 @@
       <dt>Weight</dt><dd>{% if record.weight_kg %}{{ record.weight_kg }} kg{% else %}-{% endif %}</dd>
       <dt>Height</dt><dd>{% if record.height_cm %}{{ record.height_cm }} cm{% else %}-{% endif %}</dd>
       <dt>Blood Pressure</dt><dd>{{ record.blood_pressure|default:"-" }}</dd>
-      <dt>Hemoglobin</dt><dd>{% if record.hemoglobin_level %}{{ record.hemoglobin_level }} g/dL{% else %}-{% endif %}</dd>
       <dt>Nutritional Status</dt><dd>{{ record.get_nutritional_status_display|default:"-" }}</dd>
+      <dt>PMTCT</dt><dd>{% if record.pmtct_checked %}Yes{% else %}No{% endif %}</dd>
+      <dt>STD's</dt><dd>{% if record.stds_checked %}Yes{% else %}No{% endif %}</dd>
     </dl>
   </div>
 
@@ -79,21 +82,15 @@
     <h3 class="section-title">F. Ultrasound and Referral</h3>
     <dl class="detail-list">
       <dt>First Ultrasound This Pregnancy</dt><dd>{% if record.first_ultrasound_current_pregnancy %}Yes{% else %}No{% endif %}</dd>
-      <dt>Previous Pregnancies Included Ultrasound</dt><dd>{% if record.previous_pregnancies_with_ultrasound %}Yes{% else %}No{% endif %}</dd>
-      <dt>Number of Previous Pregnancies With Ultrasound</dt><dd>{{ record.previous_pregnancies_with_ultrasound_count|default:"-" }}</dd>
       <dt>Ultrasound Service Helpful</dt><dd>{% if record.ultrasound_service_helpful %}Yes{% else %}No{% endif %}</dd>
       <dt>Ultrasound Before 24 Weeks</dt><dd>{% if record.ultrasound_before_24_weeks %}Yes{% else %}No{% endif %}</dd>
       <dt>Ultrasound High-Risk Screening</dt><dd>{% if record.ultrasound_screened_high_risk %}Yes{% else %}No{% endif %}</dd>
-      <dt>First Ultrasound Gestational Age</dt><dd>{% if record.first_ultrasound_gestation_weeks %}{{ record.first_ultrasound_gestation_weeks }} weeks{% else %}-{% endif %}</dd>
       <dt>High-Risk Pregnancy</dt><dd>{% if record.high_risk_pregnancy %}Yes{% else %}No{% endif %}</dd>
-      <dt>RUAA High-Risk Identified</dt><dd>{% if record.high_risk_identified_through_ruaa %}Yes{% else %}No{% endif %}</dd>
       <dt>Placenta Previa Detected</dt><dd>{% if record.complication_placenta_previa %}Yes{% else %}No{% endif %}</dd>
       <dt>Multiple Gestation Detected</dt><dd>{% if record.complication_multiple_gestation %}Yes{% else %}No{% endif %}</dd>
       <dt>Breech Detected</dt><dd>{% if record.complication_breech %}Yes{% else %}No{% endif %}</dd>
       <dt>Other Complications</dt><dd>{{ record.complication_other|default:"-" }}</dd>
-      <dt>Referred High-Risk Pregnancy</dt><dd>{% if record.referred_high_risk_pregnancy %}Yes{% else %}No{% endif %}</dd>
-      <dt>Referral Completed</dt><dd>{% if record.referral_completed %}Yes{% else %}No{% endif %}</dd>
-      <dt>Received Appropriate Referral Care</dt><dd>{% if record.referral_received_appropriate_care %}Yes{% else %}No{% endif %}</dd>
+      <dt>Are You Referred to a Higher-Level Facility?</dt><dd>{% if record.referred_high_risk_pregnancy %}Yes{% else %}No{% endif %}</dd>
       <dt>Other Benefit</dt><dd>{{ record.benefit_other|default:"-" }}</dd>
       <dt>Other Referral Reason</dt><dd>{{ record.referral_reason_other|default:"-" }}</dd>
     </dl>
@@ -102,11 +99,10 @@
   <div class="card">
     <h3 class="section-title">G. GBV Response</h3>
     <dl class="detail-list">
-      <dt>Asked Privately About Safety</dt><dd>{% if record.gbv_asked_about_safety %}Yes{% else %}No{% endif %}</dd>
-      <dt>Respectful and Supportive Provider</dt><dd>{% if record.gbv_respectful_supportive_provider %}Yes{% else %}No{% endif %}</dd>
+      <dt>Encountered GBV</dt><dd>{% if record.gbv_encountered %}Yes{% else %}No{% endif %}</dd>
+      <dt>Shared or Reported the Concern</dt><dd>{% if record.gbv_shared_concern %}Yes{% else %}No{% endif %}</dd>
       <dt>Given Information for Help</dt><dd>{% if record.gbv_given_information_for_help %}Yes{% else %}No{% endif %}</dd>
       <dt>Offered Help or Referral</dt><dd>{% if record.gbv_offered_help_or_referral is None %}Not applicable{% elif record.gbv_offered_help_or_referral %}Yes{% else %}No{% endif %}</dd>
-      <dt>Felt Safe Discussing Issues</dt><dd>{% if record.gbv_felt_safe_discussing_issues %}Yes{% else %}No{% endif %}</dd>
     </dl>
   </div>
 

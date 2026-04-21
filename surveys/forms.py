@@ -7,6 +7,10 @@ from .models import MaternalRecord
 
 
 class MaternalRecordForm(forms.ModelForm):
+    YES_NO_CHOICES = (
+        ('true', 'Yes'),
+        ('false', 'No'),
+    )
     YES_NO_NA_CHOICES = (
         ('', 'Not applicable'),
         ('true', 'Yes'),
@@ -22,22 +26,24 @@ class MaternalRecordForm(forms.ModelForm):
             'middle_name': forms.TextInput(attrs={'class': 'form-input'}),
             'age': forms.NumberInput(attrs={'class': 'form-input', 'min': 0, 'max': 120}),
             'civil_status': forms.Select(attrs={'class': 'form-select'}),
+            'occupation': forms.Select(attrs={'class': 'form-select'}),
             'address_barangay': forms.TextInput(attrs={'class': 'form-input'}),
             'address_municipality': forms.TextInput(attrs={'class': 'form-input'}),
             'address_province': forms.TextInput(attrs={'class': 'form-input'}),
             'contact_number': forms.TextInput(attrs={'class': 'form-input', 'inputmode': 'tel'}),
-            'educational_attainment': forms.Select(attrs={'class': 'form-select'}),
             'gravida': forms.NumberInput(attrs={'class': 'form-input', 'min': 0}),
             'para': forms.NumberInput(attrs={'class': 'form-input', 'min': 0}),
             'abortion': forms.NumberInput(attrs={'class': 'form-input', 'min': 0}),
             'living_children': forms.NumberInput(attrs={'class': 'form-input', 'min': 0}),
             'last_delivery_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
             'last_delivery_type': forms.Select(attrs={'class': 'form-select'}),
+            'last_delivery_location': forms.Select(attrs={'class': 'form-select'}),
+            'home_delivery_support': forms.Select(attrs={'class': 'form-select'}),
             'lmp': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
             'age_of_gestation_weeks': forms.NumberInput(attrs={'class': 'form-input', 'min': 0, 'max': 45}),
             'expected_date_of_delivery': forms.DateInput(attrs={'type': 'date', 'class': 'form-input'}),
             'prenatal_visit_count': forms.NumberInput(attrs={'class': 'form-input', 'min': 0}),
-            'prenatal_facility': forms.TextInput(attrs={'class': 'form-input'}),
+            'prenatal_facility': forms.Select(attrs={'class': 'form-select'}),
             'weight_kg': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01', 'min': 0}),
             'height_cm': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01', 'min': 0}),
             'blood_pressure': forms.TextInput(attrs={'class': 'form-input', 'placeholder': '120/80'}),
@@ -61,6 +67,30 @@ class MaternalRecordForm(forms.ModelForm):
         self.fields['last_name'].required = True
         self.fields['first_name'].required = True
         self.fields['date_collected'].required = True
+        yes_no_fields = (
+            'first_ultrasound_current_pregnancy',
+            'ultrasound_before_24_weeks',
+            'ultrasound_screened_high_risk',
+            'ultrasound_service_helpful',
+            'benefit_saves_travel_time',
+            'benefit_detects_problems_early',
+            'benefit_understands_baby_health',
+            'benefit_encourages_anc',
+            'benefit_enables_early_referral',
+            'benefit_knows_due_date',
+            'high_risk_pregnancy',
+            'referred_high_risk_pregnancy',
+        )
+        for field_name in yes_no_fields:
+            current_value = self.initial.get(field_name, getattr(self.instance, field_name, False))
+            initial_value = 'true' if current_value else 'false'
+            self.fields[field_name] = forms.TypedChoiceField(
+                choices=self.YES_NO_CHOICES,
+                required=False,
+                coerce=lambda value: value == 'true',
+                widget=forms.Select(attrs={'class': 'form-select'}),
+                initial=initial_value,
+            )
         for field_name in ('gbv_offered_help_or_referral', 'sti_offered_testing_or_treatment'):
             current_value = self.initial.get(field_name, getattr(self.instance, field_name, None))
             initial_value = {True: 'true', False: 'false'}.get(current_value, '')
@@ -85,6 +115,9 @@ class MaternalRecordForm(forms.ModelForm):
 
         if not cleaned_data.get('previous_pregnancies_with_ultrasound'):
             cleaned_data['previous_pregnancies_with_ultrasound_count'] = None
+
+        if cleaned_data.get('last_delivery_location') != 'home':
+            cleaned_data['home_delivery_support'] = ''
 
         return cleaned_data
 

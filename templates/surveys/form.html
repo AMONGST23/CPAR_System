@@ -78,8 +78,8 @@
           {{ form.contact_number }}
         </div>
         <div class="form-group">
-          <label class="form-label">Educational Attainment</label>
-          {{ form.educational_attainment }}
+          <label class="form-label">Occupation</label>
+          {{ form.occupation }}
         </div>
         <div class="form-group form-group--required">
           <label class="form-label">Date Collected *</label>
@@ -105,7 +105,7 @@
           {% if form.para.errors %}<p class="form-error">{{ form.para.errors.0 }}</p>{% endif %}
         </div>
         <div class="form-group">
-          <label class="form-label">Abortion</label>
+          <label class="form-label">Miscarriage</label>
           {{ form.abortion }}
         </div>
         <div class="form-group">
@@ -122,6 +122,16 @@
         <div class="form-group">
           <label class="form-label">Last Delivery Type</label>
           {{ form.last_delivery_type }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Delivery Location</label>
+          {{ form.last_delivery_location }}
+          {% if form.last_delivery_location.errors %}<p class="form-error">{{ form.last_delivery_location.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">If Home, who attended the delivery?</label>
+          {{ form.home_delivery_support }}
+          {% if form.home_delivery_support.errors %}<p class="form-error">{{ form.home_delivery_support.errors.0 }}</p>{% endif %}
         </div>
       </div>
     </div>
@@ -152,11 +162,11 @@
           {{ form.expected_date_of_delivery }}
         </div>
         <div class="form-group">
-          <label class="form-label">Prenatal Visits</label>
+          <label class="form-label">Antenatal Visit/Contact</label>
           {{ form.prenatal_visit_count }}
         </div>
         <div class="form-group">
-          <label class="form-label">Prenatal Facility</label>
+          <label class="form-label">Antenatal Facility/Health Facility</label>
           {{ form.prenatal_facility }}
         </div>
       </div>
@@ -179,16 +189,16 @@
           <label class="form-label">Blood Pressure</label>
           {{ form.blood_pressure }}
         </div>
-        <div class="form-group">
-          <label class="form-label">Hemoglobin (g/dL)</label>
-          {{ form.hemoglobin_level }}
-        </div>
       </div>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">Nutritional Status</label>
           {{ form.nutritional_status }}
         </div>
+      </div>
+      <div class="checkbox-group">
+        <label class="checkbox-label">{{ form.pmtct_checked }} PMTCT</label>
+        <label class="checkbox-label">{{ form.stds_checked }} STD's</label>
       </div>
     </div>
   </div>
@@ -214,67 +224,97 @@
   <div class="tab-panel {% if active_section == 'sec-f' %}active{% endif %}" id="sec-f">
     <div class="card">
       <h3 class="section-title">F. Ultrasound, Service Benefit, and Referral</h3>
-      <div class="checkbox-group">
-        <label class="checkbox-label">{{ form.first_ultrasound_current_pregnancy }} Is this your first ultrasound scan during this pregnancy?</label>
-        <label class="checkbox-label">{{ form.ultrasound_before_24_weeks }} Received at least one ultrasound before 24 weeks gestation</label>
-        <label class="checkbox-label">{{ form.ultrasound_screened_high_risk }} Screened for high-risk conditions using ultrasound</label>
-      </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">Did any of your previous pregnancies include an ultrasound?</label>
-          {{ form.previous_pregnancies_with_ultrasound }}
-          {% if form.previous_pregnancies_with_ultrasound.errors %}<p class="form-error">{{ form.previous_pregnancies_with_ultrasound.errors.0 }}</p>{% endif %}
-        </div>
-        <div class="form-group">
-          <label class="form-label">Average Gestational Age at First Ultrasound (weeks)</label>
-          {{ form.first_ultrasound_gestation_weeks }}
-        </div>
-        <div class="form-group">
-          <label class="form-label">How many previous pregnancies included an ultrasound?</label>
-          {{ form.previous_pregnancies_with_ultrasound_count }}
-          {% if form.previous_pregnancies_with_ultrasound_count.errors %}<p class="form-error">{{ form.previous_pregnancies_with_ultrasound_count.errors.0 }}</p>{% endif %}
-        </div>
-      </div>
-      <div class="checkbox-group">
-        <label class="checkbox-label">{{ form.ultrasound_service_helpful }} Do you find the ultrasound service helpful?</label>
-      </div>
-      <div class="checkbox-group">
-        <label class="checkbox-label">{{ form.benefit_saves_travel_time }} Saves travel time to distant health facilities</label>
-        <label class="checkbox-label">{{ form.benefit_reduces_transport_costs }} Reduces transport costs</label>
-        <label class="checkbox-label">{{ form.benefit_detects_problems_early }} Helps detect pregnancy problems early</label>
-        <label class="checkbox-label">{{ form.benefit_understands_baby_health }} Improves understanding of baby's health</label>
-        <label class="checkbox-label">{{ form.benefit_encourages_anc }} Encourages attending ANC services</label>
-        <label class="checkbox-label">{{ form.benefit_enables_early_referral }} Enables early referral when needed</label>
-        <label class="checkbox-label">{{ form.benefit_knows_due_date }} Helps to know the delivery due date</label>
+      <div class="form-group">
+        <label class="form-label">Is this your first ultrasound scan during this pregnancy?</label>
+        {{ form.first_ultrasound_current_pregnancy }}
       </div>
       <div class="form-group">
-        <label class="form-label">Other ultrasound benefit</label>
+        <label class="form-label">Received at least one ultrasound before 24 weeks gestation</label>
+        {{ form.ultrasound_before_24_weeks }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Screened for high-risk conditions using ultrasound</label>
+        {{ form.ultrasound_screened_high_risk }}
+      </div>
+
+      <p class="form-label">Ultrasound service experience</p>
+      <div class="form-group">
+        <label class="form-label">Do you find the ultrasound service helpful?</label>
+        {{ form.ultrasound_service_helpful }}
+      </div>
+
+      <p class="form-label">If yes, how did it help?</p>
+      <div class="form-group">
+        <label class="form-label">Other (specify)</label>
         {{ form.benefit_other }}
       </div>
-      <div class="checkbox-group">
-        <label class="checkbox-label">{{ form.high_risk_pregnancy }} Is this pregnancy classified as high-risk?</label>
-        <label class="checkbox-label">{{ form.high_risk_identified_through_ruaa }} High-risk pregnancy identified through RUAA</label>
-        <label class="checkbox-label">{{ form.referred_high_risk_pregnancy }} Was the client referred to a higher-level facility?</label>
-        <label class="checkbox-label">{{ form.referral_completed }} Reached the referral facility after referral</label>
-        <label class="checkbox-label">{{ form.referral_received_appropriate_care }} Received appropriate care at referral facility</label>
+      <div class="form-group">
+        <label class="form-label">Save travel time and cost</label>
+        {{ form.benefit_saves_travel_time }}
       </div>
+      <div class="form-group">
+        <label class="form-label">Helps detect pregnancy problems early</label>
+        {{ form.benefit_detects_problems_early }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Improves understanding of baby's health</label>
+        {{ form.benefit_understands_baby_health }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Encourages attending ANC services</label>
+        {{ form.benefit_encourages_anc }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Enables early referral when needed</label>
+        {{ form.benefit_enables_early_referral }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Helps to know the delivery due date</label>
+        {{ form.benefit_knows_due_date }}
+      </div>
+
+      <p class="form-label">Risk and referral</p>
+      <div class="form-group">
+        <label class="form-label">Is this pregnancy classified as high-risk?</label>
+        {{ form.high_risk_pregnancy }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Are you referred to a higher-level facility?</label>
+        {{ form.referred_high_risk_pregnancy }}
+      </div>
+
       <p class="form-label">Reason for referral</p>
-      <div class="checkbox-group">
-        <label class="checkbox-label">{{ form.referral_reason_obstetric_complication }} Obstetric complication</label>
-        <label class="checkbox-label">{{ form.referral_reason_no_fetal_heartbeat }} No fetal heartbeat</label>
+      <div class="form-group">
+        <label class="checkbox-label">{{ form.referral_reason_ectopic_pregnancy }} Ectopic Pregnancy</label>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">{{ form.referral_reason_placental_abnormalities }} Placental Abnormalities</label>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">{{ form.referral_reason_amniotic_fluid_disorders }} Amniotic Fluid Disorders</label>
+      </div>
+      <div class="form-group">
         <label class="checkbox-label">{{ form.referral_reason_malpresentation }} Malpresentation</label>
-        <label class="checkbox-label">{{ form.referral_reason_multiple_pregnancy }} Multiple pregnancy</label>
-        <label class="checkbox-label">{{ form.referral_reason_hiv_related }} HIV-related</label>
-        <label class="checkbox-label">{{ form.referral_reason_severe_anemia_malnutrition }} Severe anemia/malnutrition</label>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">{{ form.referral_reason_uterine_pathologies }} Uterine Pathologies</label>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">{{ form.referral_reason_fetal_distress }} Fetal Distress</label>
       </div>
       <div class="form-group">
         <label class="form-label">Other referral reason</label>
         {{ form.referral_reason_other }}
       </div>
+
       <p class="form-label">Detected pregnancy complications</p>
-      <div class="checkbox-group">
+      <div class="form-group">
         <label class="checkbox-label">{{ form.complication_placenta_previa }} Placenta previa</label>
+      </div>
+      <div class="form-group">
         <label class="checkbox-label">{{ form.complication_multiple_gestation }} Multiple gestation</label>
+      </div>
+      <div class="form-group">
         <label class="checkbox-label">{{ form.complication_breech }} Breech</label>
       </div>
       <div class="form-group">
@@ -288,14 +328,13 @@
     <div class="card">
       <h3 class="section-title">G. GBV Response</h3>
       <div class="checkbox-group">
-        <label class="checkbox-label">{{ form.gbv_asked_about_safety }} During your visit, were you asked privately about your safety at home?</label>
-        <label class="checkbox-label">{{ form.gbv_respectful_supportive_provider }} Did the provider speak to you in a respectful and supportive way?</label>
+        <label class="checkbox-label">{{ form.gbv_encountered }} Have you encountered GBV?</label>
+        <label class="checkbox-label">{{ form.gbv_shared_concern }} Did you share or report the concern?</label>
         <label class="checkbox-label">{{ form.gbv_given_information_for_help }} Were you given information on where to get help if you experience violence?</label>
-        <label class="checkbox-label">{{ form.gbv_felt_safe_discussing_issues }} Did you feel safe and comfortable discussing personal issues?</label>
       </div>
       <div class="form-grid">
         <div class="form-group">
-          <label class="form-label">If you shared a concern, were you offered help or referral?</label>
+          <label class="form-label">If GBV was encountered, were you offered help or referral?</label>
           {{ form.gbv_offered_help_or_referral }}
         </div>
       </div>

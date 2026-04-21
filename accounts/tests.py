@@ -72,7 +72,10 @@ class AdminPanelTests(TestCase):
         headers = [cell.value for cell in worksheet[1]]
         self.assertIn('Region', headers)
         self.assertIn('Marital Status', headers)
+        self.assertIn('Occupation', headers)
         self.assertIn('Ultrasound Before 24 Weeks', headers)
+        self.assertNotIn('Educational Attainment', headers)
+        self.assertNotIn('High-Risk Identified Through RUAA', headers)
 
         first_row = [cell.value for cell in worksheet[2]]
         self.assertIn('Doe', first_row)

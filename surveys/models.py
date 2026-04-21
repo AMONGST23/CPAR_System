@@ -49,21 +49,19 @@ class MaternalRecord(models.Model):
     address_province = models.CharField(max_length=100, blank=True)
     contact_number = models.CharField(max_length=20, blank=True)
 
-    EDUCATION_CHOICES = [
-        ('none', 'No formal education'),
-        ('elementary', 'Elementary'),
-        ('high_school', 'High School'),
-        ('senior_high', 'Senior High School'),
-        ('vocational', 'Vocational/Technical'),
-        ('college', 'College'),
-        ('post_grad', 'Post Graduate'),
+    OCCUPATION_CHOICES = [
+        ('farmer', 'Farmer'),
+        ('employed', 'Employed'),
+        ('self_employed', 'Self Employed'),
+        ('not_employed', 'Not Employed'),
     ]
-    educational_attainment = models.CharField(max_length=20, choices=EDUCATION_CHOICES, blank=True)
+    educational_attainment = models.CharField(max_length=20, blank=True)
+    occupation = models.CharField(max_length=20, choices=OCCUPATION_CHOICES, blank=True)
 
     # Section B: Obstetric History
     gravida = models.PositiveSmallIntegerField(null=True, blank=True, help_text='Total number of pregnancies')
     para = models.PositiveSmallIntegerField(null=True, blank=True, help_text='Number of deliveries')
-    abortion = models.PositiveSmallIntegerField(null=True, blank=True, help_text='Number of miscarriages/abortions')
+    abortion = models.PositiveSmallIntegerField(null=True, blank=True, help_text='Number of miscarriages')
     living_children = models.PositiveSmallIntegerField(null=True, blank=True)
     last_delivery_date = models.DateField(null=True, blank=True)
 
@@ -73,6 +71,16 @@ class MaternalRecord(models.Model):
         ('forceps', 'Forceps/Vacuum'),
     ]
     last_delivery_type = models.CharField(max_length=10, choices=DELIVERY_TYPE_CHOICES, blank=True)
+    LAST_DELIVERY_LOCATION_CHOICES = [
+        ('health_facility', 'Health Facility'),
+        ('home', 'Home'),
+    ]
+    HOME_DELIVERY_SUPPORT_CHOICES = [
+        ('tba', 'TBA'),
+        ('self', 'SELF'),
+    ]
+    last_delivery_location = models.CharField(max_length=20, choices=LAST_DELIVERY_LOCATION_CHOICES, blank=True)
+    home_delivery_support = models.CharField(max_length=10, choices=HOME_DELIVERY_SUPPORT_CHOICES, blank=True)
 
     # Section C: Current Pregnancy
     is_currently_pregnant = models.BooleanField(default=False)
@@ -88,7 +96,12 @@ class MaternalRecord(models.Model):
         verbose_name='Expected Date of Delivery',
     )
     prenatal_visit_count = models.PositiveSmallIntegerField(null=True, blank=True, default=0)
-    prenatal_facility = models.CharField(max_length=200, blank=True)
+    ANTENATAL_FACILITY_CHOICES = [
+        ('dispensary', 'Dispensary'),
+        ('health_center', 'Health center'),
+        ('hospital', 'Hospital'),
+    ]
+    prenatal_facility = models.CharField(max_length=20, choices=ANTENATAL_FACILITY_CHOICES, blank=True)
 
     # Section D: Health Assessment
     weight_kg = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
@@ -109,6 +122,8 @@ class MaternalRecord(models.Model):
         ('obese', 'Obese'),
     ]
     nutritional_status = models.CharField(max_length=15, choices=NUTRITIONAL_STATUS_CHOICES, blank=True)
+    pmtct_checked = models.BooleanField(default=False)
+    stds_checked = models.BooleanField(default=False)
 
     # Section E: Services Received
     TT_STATUS_CHOICES = [
@@ -150,6 +165,11 @@ class MaternalRecord(models.Model):
     referred_high_risk_pregnancy = models.BooleanField(default=False)
     referral_completed = models.BooleanField(default=False)
     referral_received_appropriate_care = models.BooleanField(default=False)
+    referral_reason_ectopic_pregnancy = models.BooleanField(default=False)
+    referral_reason_placental_abnormalities = models.BooleanField(default=False)
+    referral_reason_amniotic_fluid_disorders = models.BooleanField(default=False)
+    referral_reason_uterine_pathologies = models.BooleanField(default=False)
+    referral_reason_fetal_distress = models.BooleanField(default=False)
     referral_reason_obstetric_complication = models.BooleanField(default=False)
     referral_reason_no_fetal_heartbeat = models.BooleanField(default=False)
     referral_reason_malpresentation = models.BooleanField(default=False)
@@ -159,6 +179,8 @@ class MaternalRecord(models.Model):
     referral_reason_other = models.CharField(max_length=255, blank=True)
 
     # Section G: GBV Response
+    gbv_encountered = models.BooleanField(default=False)
+    gbv_shared_concern = models.BooleanField(default=False)
     gbv_asked_about_safety = models.BooleanField(default=False)
     gbv_respectful_supportive_provider = models.BooleanField(default=False)
     gbv_given_information_for_help = models.BooleanField(default=False)
@@ -301,6 +323,12 @@ class MaternalRecord(models.Model):
             errors['previous_pregnancies_with_ultrasound'] = (
                 'Only enter a number if previous pregnancies included an ultrasound.'
             )
+
+        if self.last_delivery_location == 'home':
+            if not self.home_delivery_support:
+                errors['home_delivery_support'] = 'Select whether the home delivery was attended by TBA or SELF.'
+        elif self.home_delivery_support:
+            errors['last_delivery_location'] = 'Home delivery support can only be entered for home deliveries.'
 
         if errors:
             raise ValidationError(errors)

@@ -80,6 +80,18 @@ class MaternalRecordFormTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('previous_pregnancies_with_ultrasound_count', form.errors)
 
+    def test_home_delivery_support_required_for_home_delivery_location(self):
+        form = MaternalRecordForm(
+            data={
+                'last_name': 'Doe',
+                'first_name': 'Jane',
+                'date_collected': '2026-03-20',
+                'last_delivery_location': 'home',
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('home_delivery_support', form.errors)
+
 
 class MaternalRecordModelTests(TestCase):
     def test_full_name_formats_middle_initial(self):
