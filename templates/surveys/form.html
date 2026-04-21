@@ -16,10 +16,19 @@
   <button type="button" class="btn btn--ghost btn--sm" data-clear-draft>Clear local draft</button>
 </div>
 
-<form method="post" id="survey-form" novalidate data-draft-key="maternal-record-draft" data-record-mode="{% if record %}edit{% else %}create{% endif %}">
+<form
+  method="post"
+  id="survey-form"
+  novalidate
+  data-draft-key="maternal-record-draft"
+  data-record-mode="{% if record %}edit{% else %}create{% endif %}"
+  data-offline-sync-url="{% url 'record_sync_api' %}"
+  data-list-url="{% url 'record_list' %}"
+>
   {% csrf_token %}
   <input type="hidden" name="current_section" id="current-section-input" value="{{ active_section|default:'sec-a' }}">
   <input type="hidden" name="submit_action" id="submit-action-input" value="continue">
+  <input type="hidden" name="sync_uuid" id="sync-uuid-input" value="{% if record %}{{ record.sync_uuid }}{% endif %}">
 
   <div class="tabs">
     <button type="button" class="tab {% if active_section == 'sec-a' or not active_section %}active{% endif %}" data-tab="sec-a">A. Respondent</button>

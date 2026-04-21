@@ -6,9 +6,14 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from rest_framework.parsers import JSONParser
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .forms import MaternalRecordForm
 from .models import MaternalRecord, SyncLog
+from .serializers import MaternalRecordSerializer
 from .utils import SyncConfigurationError, sync_unsynced_records
 
 SECTION_SEQUENCE = ['sec-a', 'sec-b', 'sec-c', 'sec-d', 'sec-e', 'sec-f', 'sec-g', 'sec-h', 'sec-i']
@@ -157,3 +162,34 @@ def trigger_sync(request):
         'failed': result['failed'],
         'attempted': result['attempted'],
     }, status=status_code)
+
+
+class RecordSyncAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [JSONParser]
+
+    def post(self, request):
+        payload = dict(request.data or {})
+        model_field_names = {field.name for field in MaternalRecord._meta.fields}
+
+        sanitized = {
+            key: value
+            for key, value in payload.items()
+            if key in model_field_names
+        }
+
+        for key in ('id', 'created_at', 'updated_at', 'is_synced'):
+            sanitized.pop(key, None)
+
+        sanitized['agent'] = request.user.pk
+        sanitized['is_synced'] = True
+
+        serializer = MaternalRecordSerializer(data=sanitized)
+        serializer.is_valid(raise_exception=True)
+        record = serializer.save()
+
+        return Response({
+            'sync_uuid': str(record.sync_uuid),
+            'status': 'synced',
+            'server_record_id': record.pk,
+        }, status=201)

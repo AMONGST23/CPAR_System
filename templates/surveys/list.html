@@ -8,13 +8,15 @@
     <p class="text-muted">{{ records.paginator.count }} total record{{ records.paginator.count|pluralize }}</p>
   </div>
   <div class="page-header-actions">
-    {% if unsynced_count > 0 %}
-    <button id="sync-btn" class="btn btn--warning" onclick="syncRecords()">
-      Confirm Local Save ({{ unsynced_count }} pending)
+    <button
+      id="sync-btn"
+      class="btn btn--warning"
+      type="button"
+      data-sync-now
+      data-sync-url="{% url 'record_sync_api' %}"
+    >
+      Sync Now
     </button>
-    {% else %}
-    <button class="btn btn--outline" disabled>All Saved Locally</button>
-    {% endif %}
     <a href="{% url 'record_create' %}" class="btn btn--primary">New Record</a>
   </div>
 </div>
@@ -43,15 +45,15 @@
       <p class="text-muted">{% if system_status.local_storage_ready %}Ready{% else %}Unavailable{% endif %}</p>
     </div>
     <div>
-      <strong>Pending Local Confirmation</strong>
-      <p class="text-muted">{{ unsynced_count }}</p>
+      <strong>Pending Device Sync</strong>
+      <p class="text-muted" data-pending-sync-count>Checking...</p>
     </div>
   </div>
 </div>
 
 {% if last_sync %}
 <div class="alert {% if last_sync.status == 'success' %}alert--success{% elif last_sync.status == 'partial' or last_sync.status == 'skipped' %}alert--warning{% else %}alert--error{% endif %}">
-  Last local save check: {{ last_sync.get_status_display }}. {{ last_sync.message }}
+  Last hosted sync log: {{ last_sync.get_status_display }}. {{ last_sync.message }}
   {% if last_sync.finished_at %}Finished {{ last_sync.finished_at }}.{% endif %}
 </div>
 {% endif %}
@@ -67,7 +69,7 @@
         <th>Region</th>
         <th>Date Collected</th>
         <th>Agent</th>
-        <th>Local Save</th>
+        <th>Hosted Sync</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -82,7 +84,7 @@
         <td>{{ record.agent.get_full_name|default:record.agent.username|default:"-" }}</td>
         <td>
           {% if record.is_synced %}
-          <span class="badge badge--success">Saved</span>
+          <span class="badge badge--success">Synced</span>
           {% else %}
           <span class="badge badge--warning">Pending</span>
           {% endif %}
@@ -117,37 +119,4 @@
 {% endif %}
 
 <div id="sync-status" class="alert hidden"></div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-function syncRecords() {
-  const btn = document.getElementById('sync-btn');
-  const status = document.getElementById('sync-status');
-  btn.disabled = true;
-  btn.textContent = 'Confirming...';
-  fetch("{% url 'trigger_sync' %}", {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': '{{ csrf_token }}',
-      'Content-Type': 'application/json',
-    },
-  })
-  .then(r => r.json())
-  .then(data => {
-    status.className = 'alert alert--' + (data.status === 'ok' ? 'success' : 'error');
-    status.textContent = data.message;
-    status.classList.remove('hidden');
-    if (data.status === 'ok') setTimeout(() => location.reload(), 1500);
-    else btn.disabled = false;
-  })
-  .catch(err => {
-    status.className = 'alert alert--error';
-    status.textContent = 'Local save confirmation failed: ' + err.message;
-    status.classList.remove('hidden');
-    btn.disabled = false;
-    btn.textContent = 'Retry Confirmation';
-  });
-}
-</script>
 {% endblock %}

@@ -4,6 +4,7 @@ from .models import MaternalRecord
 
 class MaternalRecordSerializer(serializers.ModelSerializer):
     agent_username = serializers.CharField(source='agent.username', read_only=True)
+    sync_uuid = serializers.UUIDField(required=True)
 
     class Meta:
         model = MaternalRecord

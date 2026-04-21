@@ -8,4 +8,5 @@ urlpatterns = [
     path('<int:pk>/edit/', views.record_edit, name='record_edit'),
     path('<int:pk>/delete/', views.record_delete, name='record_delete'),
     path('sync/', views.trigger_sync, name='trigger_sync'),
+    path('api/sync/', views.RecordSyncAPIView.as_view(), name='record_sync_api'),
 ]

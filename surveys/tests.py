@@ -1,7 +1,10 @@
 import datetime
+import json
+import uuid
 
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from .crypto import decrypt_value, encrypt_value
 from .forms import MaternalRecordForm
@@ -158,3 +161,75 @@ class EncryptionTests(TestCase):
         encrypted = encrypt_value('secret')
         self.assertNotEqual(encrypted, 'secret')
         self.assertEqual(decrypt_value(encrypted), 'secret')
+
+
+class RecordSyncApiTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='agent-sync', password='secret123')
+        self.url = reverse('record_sync_api')
+
+    def test_authenticated_sync_creates_record_and_marks_it_synced(self):
+        self.client.force_login(self.user)
+        sync_uuid = str(uuid.uuid4())
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps({
+                'sync_uuid': sync_uuid,
+                'last_name': 'Doe',
+                'first_name': 'Jane',
+                'date_collected': '2026-04-22',
+            }),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 201)
+        record = MaternalRecord.objects.get(sync_uuid=sync_uuid)
+        self.assertEqual(record.agent, self.user)
+        self.assertTrue(record.is_synced)
+
+    def test_sync_upserts_existing_record_using_sync_uuid(self):
+        self.client.force_login(self.user)
+        sync_uuid = str(uuid.uuid4())
+
+        first_response = self.client.post(
+            self.url,
+            data=json.dumps({
+                'sync_uuid': sync_uuid,
+                'last_name': 'Doe',
+                'first_name': 'Jane',
+                'date_collected': '2026-04-22',
+            }),
+            content_type='application/json',
+        )
+        self.assertEqual(first_response.status_code, 201)
+
+        second_response = self.client.post(
+            self.url,
+            data=json.dumps({
+                'sync_uuid': sync_uuid,
+                'last_name': 'Doe',
+                'first_name': 'Janet',
+                'date_collected': '2026-04-22',
+            }),
+            content_type='application/json',
+        )
+
+        self.assertEqual(second_response.status_code, 201)
+        self.assertEqual(MaternalRecord.objects.count(), 1)
+        record = MaternalRecord.objects.get(sync_uuid=sync_uuid)
+        self.assertEqual(record.first_name, 'Janet')
+
+    def test_sync_api_requires_authentication(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps({
+                'sync_uuid': str(uuid.uuid4()),
+                'last_name': 'Doe',
+                'first_name': 'Jane',
+                'date_collected': '2026-04-22',
+            }),
+            content_type='application/json',
+        )
+
+        self.assertIn(response.status_code, [401, 403])
