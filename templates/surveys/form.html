@@ -24,6 +24,7 @@
   data-record-mode="{% if record %}edit{% else %}create{% endif %}"
   data-offline-sync-url="{% url 'record_sync_api' %}"
   data-list-url="{% url 'record_list' %}"
+  data-create-url="{% url 'record_create' %}"
 >
   {% csrf_token %}
   <input type="hidden" name="current_section" id="current-section-input" value="{{ active_section|default:'sec-a' }}">
@@ -427,6 +428,8 @@ function activateSection(sectionId) {
     currentSectionInput.value = sectionId;
   }
 }
+
+window.activateSection = activateSection;
 
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', function() {

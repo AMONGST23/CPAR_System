@@ -51,6 +51,26 @@
   </div>
 </div>
 
+<div class="card hidden" style="margin-bottom: 1rem;" data-local-records-container data-create-url="{% url 'record_create' %}">
+  <h3 class="section-title">Saved on This Device</h3>
+  <p class="text-muted" data-local-records-summary>Checking device records...</p>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Local ID</th>
+          <th>Name</th>
+          <th>Date Collected</th>
+          <th>Current Section</th>
+          <th>Device Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody data-local-records-body></tbody>
+    </table>
+  </div>
+</div>
+
 {% if last_sync %}
 <div class="alert {% if last_sync.status == 'success' %}alert--success{% elif last_sync.status == 'partial' or last_sync.status == 'skipped' %}alert--warning{% else %}alert--error{% endif %}">
   Last hosted sync log: {{ last_sync.get_status_display }}. {{ last_sync.message }}

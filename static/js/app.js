@@ -28,20 +28,14 @@
     alert.classList.remove('hidden');
   }
 
-  function hideAlert(alert) {
-    if (!alert) {
-      return;
-    }
-
-    alert.textContent = '';
-    alert.className = 'alert hidden';
-  }
-
-  function storeSyncMessage(message) {
+  function storeSessionMessage(message, variant) {
     try {
-      window.sessionStorage.setItem('cpar-sync-message', message);
+      window.sessionStorage.setItem('cpar-sync-message', JSON.stringify({
+        message: message,
+        variant: variant || 'warning'
+      }));
     } catch (error) {
-      console.error('Failed to store sync message:', error);
+      console.error('Failed to store session message:', error);
     }
   }
 
@@ -51,13 +45,14 @@
     }
 
     try {
-      const message = window.sessionStorage.getItem('cpar-sync-message');
-      if (!message) {
+      const rawMessage = window.sessionStorage.getItem('cpar-sync-message');
+      if (!rawMessage) {
         return;
       }
 
       window.sessionStorage.removeItem('cpar-sync-message');
-      setAlert(statusAlert, message, 'warning');
+      const parsed = JSON.parse(rawMessage);
+      setAlert(statusAlert, parsed.message, parsed.variant || 'warning');
     } catch (error) {
       console.error('Failed to restore sync message:', error);
     }
@@ -82,6 +77,48 @@
       const value = character === 'x' ? random : (random & 0x3 | 0x8);
       return value.toString(16);
     });
+  }
+
+  function getUrlParams() {
+    return new URLSearchParams(window.location.search);
+  }
+
+  function buildCreateUrl(baseUrl, syncUuid, section) {
+    const url = new URL(baseUrl, window.location.origin);
+    url.searchParams.set('offline_record', syncUuid);
+    if (section) {
+      url.searchParams.set('section', section);
+    }
+    return url.pathname + url.search;
+  }
+
+  function sectionLabel(sectionId) {
+    const labels = {
+      'sec-a': 'A. Respondent',
+      'sec-b': 'B. Obstetric History',
+      'sec-c': 'C. Current Pregnancy',
+      'sec-d': 'D. Health Assessment',
+      'sec-e': 'E. Services',
+      'sec-f': 'F. Ultrasound & Referral',
+      'sec-g': 'G. GBV Response',
+      'sec-h': 'H. Nutrition, FP & STI',
+      'sec-i': 'I. Client Experience'
+    };
+    return labels[sectionId] || sectionId || 'Unknown';
+  }
+
+  function localStatusLabel(status) {
+    const labels = {
+      draft: 'Draft on device',
+      pending_sync: 'Pending sync',
+      syncing: 'Syncing',
+      sync_failed: 'Sync failed'
+    };
+    return labels[status] || status;
+  }
+
+  function isSyncableStatus(status) {
+    return status === 'pending_sync' || status === 'sync_failed';
   }
 
   function openSyncDatabase() {
@@ -135,34 +172,72 @@
     });
   }
 
-  function queueSubmission(entry) {
+  function normalizeLocalRecord(entry) {
+    const payload = entry && entry.payload ? entry.payload : {};
+    return {
+      sync_uuid: entry.sync_uuid || payload.sync_uuid || generateSyncUuid(),
+      local_id: entry.local_id || (entry.sync_uuid || payload.sync_uuid || generateSyncUuid()).slice(0, 8),
+      status: entry.status || 'draft',
+      current_section: entry.current_section || 'sec-a',
+      payload: payload,
+      createdAt: entry.createdAt || new Date().toISOString(),
+      updatedAt: entry.updatedAt || new Date().toISOString(),
+      lastAttemptAt: entry.lastAttemptAt || null,
+      error: entry.error || ''
+    };
+  }
+
+  function putLocalRecord(record) {
     return withSyncStore('readwrite', function (store) {
-      return store.put(entry);
+      return store.put(normalizeLocalRecord(record));
     });
   }
 
-  function removeQueuedSubmission(syncUuid) {
+  function deleteLocalRecord(syncUuid) {
     return withSyncStore('readwrite', function (store) {
       return store.delete(syncUuid);
     });
   }
 
-  function getQueuedSubmissions() {
+  function getAllLocalRecords() {
     return withSyncStore('readonly', function (store) {
       return store.getAll();
     }).then(function (entries) {
-      return (entries || []).sort(function (first, second) {
-        return new Date(first.createdAt).getTime() - new Date(second.createdAt).getTime();
+      return (entries || []).map(normalizeLocalRecord).sort(function (first, second) {
+        return new Date(second.updatedAt).getTime() - new Date(first.updatedAt).getTime();
       });
     });
   }
 
-  function countQueuedSubmissions() {
-    return getQueuedSubmissions().then(function (entries) {
+  function getLocalRecord(syncUuid) {
+    return withSyncStore('readonly', function (store) {
+      return store.get(syncUuid);
+    }).then(function (entry) {
+      return entry ? normalizeLocalRecord(entry) : null;
+    });
+  }
+
+  function countSyncableRecords() {
+    return getAllLocalRecords().then(function (entries) {
       return entries.filter(function (entry) {
-        return entry.status !== 'synced';
+        return isSyncableStatus(entry.status);
       }).length;
     });
+  }
+
+  function getSectionSequence() {
+    return Array.from(document.querySelectorAll('.tab[data-tab]')).map(function (tab) {
+      return tab.dataset.tab;
+    });
+  }
+
+  function getNextSection(currentSection) {
+    const sequence = getSectionSequence();
+    const index = sequence.indexOf(currentSection);
+    if (index === -1 || index >= sequence.length - 1) {
+      return currentSection;
+    }
+    return sequence[index + 1];
   }
 
   function serializeFormValues(form) {
@@ -196,24 +271,151 @@
     return payload;
   }
 
-  async function updatePendingSyncCount() {
-    const countElement = document.querySelector('[data-pending-sync-count]');
-    if (!countElement) {
-      return;
-    }
+  function applyValuesToForm(form, values) {
+    Object.entries(values || {}).forEach(function (entry) {
+      const name = entry[0];
+      const value = entry[1];
+      const field = form.elements.namedItem(name);
 
-    try {
-      const pendingCount = await countQueuedSubmissions();
-      if (pendingCount === 0) {
-        setText(countElement, 'All synced.');
+      if (!field || excludedFields.has(name)) {
         return;
       }
 
-      setText(countElement, pendingCount + ' record' + (pendingCount === 1 ? '' : 's') + ' waiting to sync.');
+      if (field instanceof RadioNodeList) {
+        Array.from(field).forEach(function (option) {
+          option.checked = option.value === String(value);
+        });
+        return;
+      }
+
+      if (field.type === 'checkbox') {
+        field.checked = Boolean(value);
+        return;
+      }
+
+      field.value = value == null ? '' : value;
+    });
+  }
+
+  function buildLocalRecord(payload, options) {
+    const settings = options || {};
+    const now = new Date().toISOString();
+    const existing = settings.existing || {};
+    return normalizeLocalRecord({
+      sync_uuid: payload.sync_uuid,
+      local_id: existing.local_id || payload.sync_uuid.slice(0, 8),
+      status: settings.status || existing.status || 'draft',
+      current_section: settings.currentSection || existing.current_section || 'sec-a',
+      payload: payload,
+      createdAt: existing.createdAt || now,
+      updatedAt: now,
+      lastAttemptAt: existing.lastAttemptAt || null,
+      error: settings.error || ''
+    });
+  }
+
+  function summarizeLocalRecord(record) {
+    const payload = record.payload || {};
+    const firstName = payload.first_name || 'Unnamed';
+    const lastName = payload.last_name || 'Record';
+    return {
+      localId: record.local_id,
+      name: lastName + ', ' + firstName,
+      dateCollected: payload.date_collected || '-',
+      currentSection: sectionLabel(record.current_section),
+      status: localStatusLabel(record.status),
+      syncUuid: record.sync_uuid
+    };
+  }
+
+  async function renderLocalRecords() {
+    const container = document.querySelector('[data-local-records-container]');
+    const summary = document.querySelector('[data-local-records-summary]');
+    const body = document.querySelector('[data-local-records-body]');
+
+    if (!container || !summary || !body) {
+      return;
+    }
+
+    const createUrl = container.dataset.createUrl || '/surveys/new/';
+    let records = [];
+
+    try {
+      records = await getAllLocalRecords();
+    } catch (error) {
+      console.error('Failed to load local records:', error);
+      summary.textContent = 'Offline device records are unavailable.';
+      container.classList.remove('hidden');
+      body.innerHTML = '<tr><td colspan="6">Could not read saved device records.</td></tr>';
+      return;
+    }
+
+    if (!records.length) {
+      container.classList.add('hidden');
+      body.innerHTML = '';
+      return;
+    }
+
+    container.classList.remove('hidden');
+    summary.textContent = records.length + ' record' + (records.length === 1 ? '' : 's') + ' currently saved on this device.';
+
+    body.innerHTML = records.map(function (record) {
+      const details = summarizeLocalRecord(record);
+      const continueUrl = buildCreateUrl(createUrl, record.sync_uuid, record.current_section);
+      return '' +
+        '<tr>' +
+          '<td>' + details.localId + '</td>' +
+          '<td><strong>' + details.name + '</strong></td>' +
+          '<td>' + details.dateCollected + '</td>' +
+          '<td>' + details.currentSection + '</td>' +
+          '<td>' + details.status + '</td>' +
+          '<td class="actions">' +
+            '<a href="' + continueUrl + '" class="btn btn--sm btn--outline">Continue</a>' +
+          '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  async function updatePendingSyncCount() {
+    const countElement = document.querySelector('[data-pending-sync-count]');
+    const syncButton = document.querySelector('[data-sync-now]');
+
+    try {
+      const pendingCount = await countSyncableRecords();
+
+      if (countElement) {
+        if (pendingCount === 0) {
+          setText(countElement, 'All synced.');
+        } else {
+          setText(countElement, pendingCount + ' record' + (pendingCount === 1 ? '' : 's') + ' waiting to sync.');
+        }
+      }
+
+      if (syncButton) {
+        if (pendingCount === 0) {
+          syncButton.disabled = true;
+          syncButton.textContent = 'All Synced';
+        } else {
+          syncButton.disabled = false;
+          syncButton.textContent = 'Sync Now (' + pendingCount + ')';
+        }
+      }
     } catch (error) {
       console.error('Failed to read queued sync records:', error);
-      setText(countElement, 'Offline queue unavailable.');
+      if (countElement) {
+        setText(countElement, 'Offline queue unavailable.');
+      }
+      if (syncButton) {
+        syncButton.disabled = true;
+      }
     }
+  }
+
+  async function refreshLocalSyncUi() {
+    await Promise.all([
+      updatePendingSyncCount(),
+      renderLocalRecords()
+    ]);
   }
 
   async function syncQueuedRecords(syncUrl, statusAlert, options) {
@@ -224,7 +426,7 @@
 
     let queuedEntries = [];
     try {
-      queuedEntries = await getQueuedSubmissions();
+      queuedEntries = await getAllLocalRecords();
     } catch (error) {
       console.error('Unable to open offline queue:', error);
       if (!settings.silent) {
@@ -234,19 +436,19 @@
     }
 
     const pendingEntries = queuedEntries.filter(function (entry) {
-      return entry.status !== 'synced';
+      return isSyncableStatus(entry.status);
     });
 
     if (!pendingEntries.length) {
-      await updatePendingSyncCount();
-      if (!settings.silent) {
+      await refreshLocalSyncUi();
+      if (!settings.silent && statusAlert) {
         setAlert(statusAlert, 'All device-saved records are already synced.', 'success');
       }
       return { synced: 0, failed: 0 };
     }
 
     if (!navigator.onLine) {
-      if (!settings.silent) {
+      if (!settings.silent && statusAlert) {
         setAlert(statusAlert, 'No connection. Pending device records will sync when you are back online.', 'warning');
       }
       return { synced: 0, failed: pendingEntries.length };
@@ -257,9 +459,11 @@
     let failedCount = 0;
 
     for (const entry of pendingEntries) {
-      entry.status = 'syncing';
-      entry.lastAttemptAt = new Date().toISOString();
-      await queueSubmission(entry);
+      await putLocalRecord(Object.assign({}, entry, {
+        status: 'syncing',
+        lastAttemptAt: new Date().toISOString(),
+        error: ''
+      }));
 
       try {
         const response = await fetch(syncUrl, {
@@ -282,25 +486,29 @@
             errorMessage = 'Server rejected the record.';
           }
 
-          entry.status = 'sync_failed';
-          entry.error = errorMessage;
-          await queueSubmission(entry);
+          await putLocalRecord(Object.assign({}, entry, {
+            status: 'sync_failed',
+            lastAttemptAt: new Date().toISOString(),
+            error: errorMessage
+          }));
           failedCount += 1;
           continue;
         }
 
-        await removeQueuedSubmission(entry.sync_uuid);
+        await deleteLocalRecord(entry.sync_uuid);
         syncedCount += 1;
       } catch (error) {
-        entry.status = 'sync_failed';
-        entry.error = error.message || 'Network error while syncing.';
-        await queueSubmission(entry);
+        await putLocalRecord(Object.assign({}, entry, {
+          status: 'sync_failed',
+          lastAttemptAt: new Date().toISOString(),
+          error: error.message || 'Network error while syncing.'
+        }));
         failedCount += 1;
         break;
       }
     }
 
-    await updatePendingSyncCount();
+    await refreshLocalSyncUi();
 
     if (statusAlert && !settings.silent) {
       if (failedCount && syncedCount) {
@@ -320,7 +528,7 @@
     const statusAlert = document.getElementById('sync-status');
     const syncUrl = syncButton ? syncButton.dataset.syncUrl : '';
 
-    updatePendingSyncCount();
+    refreshLocalSyncUi();
     restoreStoredSyncMessage(statusAlert);
 
     if (!syncButton) {
@@ -333,7 +541,7 @@
 
     window.addEventListener('online', function () {
       syncQueuedRecords(syncUrl, statusAlert, { silent: true }).then(function (result) {
-        if (result.synced > 0) {
+        if (result.synced > 0 && statusAlert) {
           setAlert(statusAlert, result.synced + ' device-saved record(s) synced after reconnect.', 'success');
         }
       });
@@ -348,26 +556,37 @@
     const surveyForm = document.querySelector('[data-draft-key]');
     const draftStatus = document.querySelector('[data-draft-status]');
     const clearDraftButton = document.querySelector('[data-clear-draft]');
+    const currentSectionInput = document.getElementById('current-section-input');
+    const submitActionInput = document.getElementById('submit-action-input');
 
-    if (!surveyForm) {
+    if (!surveyForm || !currentSectionInput || !submitActionInput) {
       return;
     }
 
-    const draftKey = surveyForm.dataset.draftKey;
+    const params = getUrlParams();
+    const requestedOfflineRecord = params.get('offline_record');
+    const requestedSection = params.get('section');
+    const draftKeyBase = surveyForm.dataset.draftKey;
     const isEditMode = surveyForm.dataset.recordMode === 'edit';
     const listUrl = surveyForm.dataset.listUrl || '/surveys/';
+    const createUrl = surveyForm.dataset.createUrl || '/surveys/new/';
     const syncUuidInput = surveyForm.querySelector('#sync-uuid-input');
     const storage = window.localStorage;
     let submissionInFlight = false;
+    let localRecord = null;
 
     function setDraftStatus(message) {
       setText(draftStatus, message);
     }
 
+    function getDraftKey() {
+      return draftKeyBase + '-' + (syncUuidInput && syncUuidInput.value ? syncUuidInput.value : 'new');
+    }
+
     function saveDraft() {
       const payload = serializeFormValues(surveyForm);
 
-      storage.setItem(draftKey, JSON.stringify({
+      storage.setItem(getDraftKey(), JSON.stringify({
         updatedAt: new Date().toISOString(),
         values: payload
       }));
@@ -381,7 +600,7 @@
         return;
       }
 
-      const rawDraft = storage.getItem(draftKey);
+      const rawDraft = storage.getItem(getDraftKey());
       if (!rawDraft) {
         setDraftStatus('No local draft saved yet.');
         return;
@@ -389,30 +608,7 @@
 
       try {
         const parsed = JSON.parse(rawDraft);
-        Object.entries(parsed.values || {}).forEach(function (entry) {
-          const name = entry[0];
-          const value = entry[1];
-          const field = surveyForm.elements.namedItem(name);
-
-          if (!field || excludedFields.has(name)) {
-            return;
-          }
-
-          if (field instanceof RadioNodeList) {
-            Array.from(field).forEach(function (option) {
-              option.checked = option.value === String(value);
-            });
-            return;
-          }
-
-          if (field.type === 'checkbox') {
-            field.checked = Boolean(value);
-            return;
-          }
-
-          field.value = value;
-        });
-
+        applyValuesToForm(surveyForm, parsed.values || {});
         const savedAt = parsed.updatedAt ? new Date(parsed.updatedAt).toLocaleString() : 'earlier';
         setDraftStatus('Draft restored from ' + savedAt + '.');
       } catch (error) {
@@ -422,12 +618,51 @@
     }
 
     function clearDraft(message) {
-      storage.removeItem(draftKey);
+      storage.removeItem(getDraftKey());
       setDraftStatus(message || 'Local draft cleared.');
     }
 
+    async function persistLocalRecord(payload, settings) {
+      const existing = payload.sync_uuid ? await getLocalRecord(payload.sync_uuid) : null;
+      const record = buildLocalRecord(payload, {
+        existing: existing || localRecord || {},
+        status: settings.status,
+        currentSection: settings.currentSection
+      });
+      await putLocalRecord(record);
+      localRecord = record;
+      return record;
+    }
+
+    function navigateToLocalRecord(syncUuid, section) {
+      window.location.assign(buildCreateUrl(createUrl, syncUuid, section));
+    }
+
+    async function loadLocalRecordIntoForm(syncUuid) {
+      const record = await getLocalRecord(syncUuid);
+      if (!record) {
+        setDraftStatus('This local record could not be found on the device.');
+        return;
+      }
+
+      localRecord = record;
+      if (syncUuidInput) {
+        syncUuidInput.value = record.sync_uuid;
+      }
+      applyValuesToForm(surveyForm, record.payload || {});
+
+      const sectionToOpen = requestedSection || record.current_section || currentSectionInput.value;
+      if (typeof window.activateSection === 'function') {
+        window.activateSection(sectionToOpen);
+      } else {
+        currentSectionInput.value = sectionToOpen;
+      }
+
+      setDraftStatus('Local record loaded from this device. Continue working and sync later.');
+    }
+
     if (syncUuidInput && !syncUuidInput.value) {
-      syncUuidInput.value = generateSyncUuid();
+      syncUuidInput.value = requestedOfflineRecord || generateSyncUuid();
     }
 
     surveyForm.addEventListener('input', saveDraft);
@@ -440,7 +675,7 @@
 
       if (isEditMode && !navigator.onLine) {
         event.preventDefault();
-        setDraftStatus('Editing offline is not supported yet. Reconnect to save changes.');
+        setDraftStatus('Editing an existing server record offline is not supported yet.');
         return;
       }
 
@@ -460,50 +695,64 @@
         }
       }
 
+      const submitAction = submitActionInput.value || 'continue';
+      const currentSection = currentSectionInput.value || 'sec-a';
+      const nextSection = getNextSection(currentSection);
+      const isFinalSection = nextSection === currentSection;
+      const shouldStayLocal = Boolean(requestedOfflineRecord || localRecord) || !navigator.onLine;
+
       try {
-        const response = await fetch(surveyForm.action || window.location.href, {
-          method: 'POST',
-          body: new window.FormData(surveyForm),
-          credentials: 'same-origin',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+        if (!shouldStayLocal) {
+          const response = await fetch(surveyForm.action || window.location.href, {
+            method: 'POST',
+            body: new window.FormData(surveyForm),
+            credentials: 'same-origin',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          });
+
+          if (response.redirected) {
+            clearDraft('Draft cleared after save.');
+            window.location.assign(response.url);
+            return;
           }
+
+          if (response.ok) {
+            const html = await response.text();
+            clearDraft('Draft cleared after save.');
+            document.open();
+            document.write(html);
+            document.close();
+            return;
+          }
+
+          throw new Error('Server returned an unexpected response while saving.');
+        }
+      } catch (error) {
+        console.warn('Falling back to local record save:', error);
+      }
+
+      try {
+        const localStatus = (submitAction === 'exit' || isFinalSection) ? 'pending_sync' : 'draft';
+        const targetSection = submitAction === 'continue' && !isFinalSection ? nextSection : currentSection;
+        const savedRecord = await persistLocalRecord(payload, {
+          status: localStatus,
+          currentSection: targetSection
         });
 
-        if (response.redirected) {
-          clearDraft('Draft cleared after save.');
-          window.location.assign(response.url);
+        clearDraft('Draft cleared after local save.');
+
+        if (submitAction === 'continue' && !isFinalSection) {
+          navigateToLocalRecord(savedRecord.sync_uuid, nextSection);
           return;
         }
 
-        if (response.ok) {
-          const html = await response.text();
-          clearDraft('Draft cleared after save.');
-          document.open();
-          document.write(html);
-          document.close();
-          return;
-        }
-
-        throw new Error('Server returned an unexpected response while saving.');
-      } catch (error) {
-        try {
-          await queueSubmission({
-            sync_uuid: payload.sync_uuid,
-            payload: payload,
-            status: 'pending_sync',
-            createdAt: new Date().toISOString(),
-            lastAttemptAt: null,
-            error: ''
-          });
-          clearDraft('Draft cleared after local save.');
-          storeSyncMessage('Record saved on this device. It will sync to the server when connectivity returns.');
-          window.location.assign(listUrl);
-          return;
-        } catch (queueError) {
-          console.error('Failed to queue offline record:', queueError);
-          setDraftStatus('This device could not store the record offline. Please reconnect and try again.');
-        }
+        storeSessionMessage('Record saved on this device. It is ready to sync when connectivity returns.', 'warning');
+        window.location.assign(listUrl);
+      } catch (queueError) {
+        console.error('Failed to save local record:', queueError);
+        setDraftStatus('This device could not store the record offline. Please reconnect and try again.');
       } finally {
         submissionInFlight = false;
       }
@@ -513,6 +762,14 @@
       clearDraftButton.addEventListener('click', function () {
         clearDraft('Local draft cleared.');
       });
+    }
+
+    if (requestedOfflineRecord) {
+      loadLocalRecordIntoForm(requestedOfflineRecord).catch(function (error) {
+        console.error('Failed to load local record:', error);
+        setDraftStatus('This local device record could not be loaded.');
+      });
+      return;
     }
 
     restoreDraft();
