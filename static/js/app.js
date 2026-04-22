@@ -37,6 +37,32 @@
     alert.className = 'alert hidden';
   }
 
+  function storeSyncMessage(message) {
+    try {
+      window.sessionStorage.setItem('cpar-sync-message', message);
+    } catch (error) {
+      console.error('Failed to store sync message:', error);
+    }
+  }
+
+  function restoreStoredSyncMessage(statusAlert) {
+    if (!statusAlert) {
+      return;
+    }
+
+    try {
+      const message = window.sessionStorage.getItem('cpar-sync-message');
+      if (!message) {
+        return;
+      }
+
+      window.sessionStorage.removeItem('cpar-sync-message');
+      setAlert(statusAlert, message, 'warning');
+    } catch (error) {
+      console.error('Failed to restore sync message:', error);
+    }
+  }
+
   function getCookie(name) {
     const cookieValue = document.cookie
       .split(';')
@@ -295,18 +321,10 @@
     const syncUrl = syncButton ? syncButton.dataset.syncUrl : '';
 
     updatePendingSyncCount();
+    restoreStoredSyncMessage(statusAlert);
 
     if (!syncButton) {
       return;
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('offline_saved') === '1') {
-      setAlert(statusAlert, 'Record saved on this device. It will sync to the server when connectivity returns.', 'warning');
-      params.delete('offline_saved');
-      const nextQuery = params.toString();
-      const nextUrl = window.location.pathname + (nextQuery ? '?' + nextQuery : '');
-      window.history.replaceState({}, document.title, nextUrl);
     }
 
     syncButton.addEventListener('click', function () {
@@ -438,7 +456,8 @@
         error: ''
       }).then(function () {
         clearDraft('Draft cleared after local save.');
-        window.location.assign(listUrl + '?offline_saved=1');
+        storeSyncMessage('Record saved on this device. It will sync to the server when connectivity returns.');
+        window.location.assign(listUrl);
       }).catch(function (error) {
         console.error('Failed to queue offline record:', error);
         setDraftStatus('This device could not store the record offline. Please reconnect and try again.');
