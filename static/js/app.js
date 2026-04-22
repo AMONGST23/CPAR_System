@@ -358,6 +358,7 @@
     const listUrl = surveyForm.dataset.listUrl || '/surveys/';
     const syncUuidInput = surveyForm.querySelector('#sync-uuid-input');
     const storage = window.localStorage;
+    let submissionInFlight = false;
 
     function setDraftStatus(message) {
       setText(draftStatus, message);
@@ -431,13 +432,25 @@
 
     surveyForm.addEventListener('input', saveDraft);
     surveyForm.addEventListener('change', saveDraft);
-    surveyForm.addEventListener('submit', function (event) {
-      if (navigator.onLine) {
+    surveyForm.addEventListener('submit', async function (event) {
+      if (submissionInFlight) {
+        event.preventDefault();
+        return;
+      }
+
+      if (isEditMode && !navigator.onLine) {
+        event.preventDefault();
+        setDraftStatus('Editing offline is not supported yet. Reconnect to save changes.');
+        return;
+      }
+
+      if (isEditMode) {
         clearDraft('Draft cleared after save.');
         return;
       }
 
       event.preventDefault();
+      submissionInFlight = true;
 
       const payload = serializeFormValues(surveyForm);
       if (!payload.sync_uuid) {
@@ -447,21 +460,53 @@
         }
       }
 
-      queueSubmission({
-        sync_uuid: payload.sync_uuid,
-        payload: payload,
-        status: 'pending_sync',
-        createdAt: new Date().toISOString(),
-        lastAttemptAt: null,
-        error: ''
-      }).then(function () {
-        clearDraft('Draft cleared after local save.');
-        storeSyncMessage('Record saved on this device. It will sync to the server when connectivity returns.');
-        window.location.assign(listUrl);
-      }).catch(function (error) {
-        console.error('Failed to queue offline record:', error);
-        setDraftStatus('This device could not store the record offline. Please reconnect and try again.');
-      });
+      try {
+        const response = await fetch(surveyForm.action || window.location.href, {
+          method: 'POST',
+          body: new window.FormData(surveyForm),
+          credentials: 'same-origin',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if (response.redirected) {
+          clearDraft('Draft cleared after save.');
+          window.location.assign(response.url);
+          return;
+        }
+
+        if (response.ok) {
+          const html = await response.text();
+          clearDraft('Draft cleared after save.');
+          document.open();
+          document.write(html);
+          document.close();
+          return;
+        }
+
+        throw new Error('Server returned an unexpected response while saving.');
+      } catch (error) {
+        try {
+          await queueSubmission({
+            sync_uuid: payload.sync_uuid,
+            payload: payload,
+            status: 'pending_sync',
+            createdAt: new Date().toISOString(),
+            lastAttemptAt: null,
+            error: ''
+          });
+          clearDraft('Draft cleared after local save.');
+          storeSyncMessage('Record saved on this device. It will sync to the server when connectivity returns.');
+          window.location.assign(listUrl);
+          return;
+        } catch (queueError) {
+          console.error('Failed to queue offline record:', queueError);
+          setDraftStatus('This device could not store the record offline. Please reconnect and try again.');
+        }
+      } finally {
+        submissionInFlight = false;
+      }
     });
 
     if (clearDraftButton) {
