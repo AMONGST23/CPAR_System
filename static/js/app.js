@@ -17,7 +17,7 @@
   }
 
   function warmCacheAppRoutes() {
-    if (!('serviceWorker' in navigator) || !navigator.onLine || !body) {
+    if (!navigator.onLine || !body) {
       return;
     }
 
@@ -30,8 +30,31 @@
       return;
     }
 
+    if ('caches' in window) {
+      caches.open('cpar-shell-v3').then(function (cache) {
+        return Promise.all(urls.map(function (url) {
+          return fetch(url, { credentials: 'same-origin' })
+            .then(function (response) {
+              if (response && response.ok) {
+                return cache.put(url, response.clone());
+              }
+              return null;
+            })
+            .catch(function () {
+              return null;
+            });
+        }));
+      }).catch(function (error) {
+        console.error('Failed to warm route cache from window context:', error);
+      });
+    }
+
+    if (!('serviceWorker' in navigator)) {
+      return;
+    }
+
     navigator.serviceWorker.ready.then(function (registration) {
-      const target = registration.active || navigator.serviceWorker.controller;
+      const target = navigator.serviceWorker.controller || registration.active;
       if (!target) {
         return;
       }
@@ -41,7 +64,7 @@
         urls: urls
       });
     }).catch(function (error) {
-      console.error('Failed to warm route cache:', error);
+      console.error('Failed to warm route cache via service worker:', error);
     });
   }
 
