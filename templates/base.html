@@ -11,7 +11,7 @@
   <link rel="manifest" href="{% static 'manifest.json' %}" />
   <link rel="icon" href="{% static 'icons/icon-192.svg' %}" />
 </head>
-<body>
+<body{% if user.is_authenticated %} data-record-list-url="{% url 'record_list' %}" data-record-create-url="{% url 'record_create' %}"{% endif %}>
   {% if user.is_authenticated %}
   <nav class="navbar">
     <div class="nav-brand">

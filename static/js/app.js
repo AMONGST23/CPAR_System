@@ -2,14 +2,52 @@
   const SYNC_DB_NAME = 'cpar-offline-sync';
   const SYNC_STORE_NAME = 'queued-records';
   const excludedFields = new Set(['csrfmiddlewaretoken']);
+  const body = document.body;
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/static/js/service-worker.js').catch(function (error) {
-        console.error('Service worker registration failed:', error);
-      });
+      navigator.serviceWorker.register('/static/js/service-worker.js')
+        .then(function () {
+          warmCacheAppRoutes();
+        })
+        .catch(function (error) {
+          console.error('Service worker registration failed:', error);
+        });
     });
   }
+
+  function warmCacheAppRoutes() {
+    if (!('serviceWorker' in navigator) || !navigator.onLine || !body) {
+      return;
+    }
+
+    const urls = [
+      body.dataset.recordListUrl,
+      body.dataset.recordCreateUrl
+    ].filter(Boolean);
+
+    if (!urls.length) {
+      return;
+    }
+
+    navigator.serviceWorker.ready.then(function (registration) {
+      const target = registration.active || navigator.serviceWorker.controller;
+      if (!target) {
+        return;
+      }
+
+      target.postMessage({
+        type: 'WARM_CACHE_URLS',
+        urls: urls
+      });
+    }).catch(function (error) {
+      console.error('Failed to warm route cache:', error);
+    });
+  }
+
+  window.addEventListener('online', function () {
+    warmCacheAppRoutes();
+  });
 
   function setText(element, message) {
     if (element) {

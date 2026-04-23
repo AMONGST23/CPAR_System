@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cpar-shell-v2';
+const CACHE_NAME = 'cpar-shell-v3';
 const OFFLINE_URL = '/static/offline.html';
 const SHELL_FILES = [
   OFFLINE_URL,
@@ -21,6 +21,32 @@ self.addEventListener('activate', (event) => {
     )
   );
   self.clients.claim();
+});
+
+self.addEventListener('message', (event) => {
+  const data = event.data || {};
+  if (data.type !== 'WARM_CACHE_URLS' || !Array.isArray(data.urls)) {
+    return;
+  }
+
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(
+        data.urls
+          .filter(Boolean)
+          .map((url) =>
+            fetch(url, { credentials: 'same-origin' })
+              .then((response) => {
+                if (response && response.ok) {
+                  return cache.put(url, response.clone());
+                }
+                return null;
+              })
+              .catch(() => null)
+          )
+      )
+    )
+  );
 });
 
 self.addEventListener('fetch', (event) => {
