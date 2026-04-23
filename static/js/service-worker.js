@@ -9,6 +9,17 @@ const SHELL_FILES = [
   '/static/icons/icon-512.svg',
 ];
 
+function getDocumentCacheKeys(url) {
+  const pathname = url.pathname;
+  const normalizedPath = pathname.endsWith('/') ? pathname : pathname + '/';
+
+  return [
+    url.href,
+    pathname,
+    normalizedPath
+  ];
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_FILES)));
   self.skipWaiting();
@@ -38,7 +49,8 @@ self.addEventListener('message', (event) => {
             fetch(url, { credentials: 'same-origin' })
               .then((response) => {
                 if (response && response.ok) {
-                  return cache.put(url, response.clone());
+                  const keys = getDocumentCacheKeys(new URL(url, self.location.origin));
+                  return Promise.all(keys.map((key) => cache.put(key, response.clone())));
                 }
                 return null;
               })
@@ -72,15 +84,21 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (isDocument) {
+    const documentCacheKeys = getDocumentCacheKeys(requestUrl);
     event.respondWith(
       fetch(event.request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          caches.open(CACHE_NAME).then((cache) =>
+            Promise.all(documentCacheKeys.map((key) => cache.put(key, copy.clone())))
+          );
           return response;
         })
         .catch(() =>
-          caches.match(event.request, { ignoreSearch: true }).then((cached) => cached || caches.match(OFFLINE_URL))
+          caches.open(CACHE_NAME).then((cache) =>
+            Promise.all(documentCacheKeys.map((key) => cache.match(key, { ignoreSearch: true })))
+              .then((matches) => matches.find(Boolean) || caches.match(OFFLINE_URL))
+          )
         )
     );
   }

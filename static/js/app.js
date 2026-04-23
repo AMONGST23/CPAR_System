@@ -16,6 +16,18 @@
     });
   }
 
+  function buildCacheKeys(url) {
+    const absoluteUrl = new URL(url, window.location.origin);
+    const pathname = absoluteUrl.pathname;
+    const normalizedPath = pathname.endsWith('/') ? pathname : pathname + '/';
+
+    return Array.from(new Set([
+      absoluteUrl.href,
+      pathname,
+      normalizedPath
+    ]));
+  }
+
   function warmCacheAppRoutes() {
     if (!navigator.onLine || !body) {
       return;
@@ -36,7 +48,10 @@
           return fetch(url, { credentials: 'same-origin' })
             .then(function (response) {
               if (response && response.ok) {
-                return cache.put(url, response.clone());
+                const keys = buildCacheKeys(url);
+                return Promise.all(keys.map(function (key) {
+                  return cache.put(key, response.clone());
+                }));
               }
               return null;
             })
